@@ -1,0 +1,23 @@
+galaxy_info:
+  role_name: win_controlm_agent_config
+  author: Stéphane Bilqué
+  description: Manage the Control/M Agent configuration on a Windows host
+  company: Informatique CDC
+  license: Apache
+
+  min_ansible_version: 2.6
+
+  github_branch: https://github.com/informatique-cdc/ansible-role-win_win_controlm_agent_config
+
+  platforms:
+   - name: Windows
+     versions:
+      - 2016
+
+  galaxy_tags:
+    - windows
+    - control-m
+    - agent
+    - configuration
+
+dependencies: []
