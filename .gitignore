@@ -1,4 +1,4 @@
 /.vscode
 /.vscode/*
-/tests
-/tests/*
+/tests/units/Ansible.Basic.cs
+/tests/units/Ansible.ModuleUtils.AddType.psm1

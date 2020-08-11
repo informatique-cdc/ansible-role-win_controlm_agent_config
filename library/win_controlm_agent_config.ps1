@@ -1,106 +1,645 @@
 #!powershell
 
 #AnsibleRequires -CSharpUtil Ansible.Basic
-#Requires -Module Ansible.ModuleUtils.CamelConversion
-#Requires -Module Ansible.ModuleUtils.Legacy
+function Get-ModuleParameter {
+    <#
+.SYNOPSIS
+Removes defined parameter values from a passed $PSBoundParameters object
+
+.DESCRIPTION
+When passed a $PSBoundParameters hashtable, this function removes standard parameters
+(like Verbose/Confirm etc) and returns the passed object with only the non-standard
+parameters left in place.
+
+.PARAMETER Parameters
+This is the input object from which to remove the default set of parameters.
+It is intended to accept the $PSBoundParameters object from another function.
+
+.PARAMETER ParametersToRemove
+Accepts an array of any additional parameter keys which should be removed from the passed input
+object. Specifying additional parameter names/keys here means that the default value assigned
+to the BaseParameters parameter will remain unchanged.
+
+.EXAMPLE
+$PSBoundParameters | Get-ModuleParameter
+
+.EXAMPLE
+Get-ModuleParameter -Parameters $PSBoundParameters -ParametersToRemove param1,param2
+
+.INPUTS
+$PSBoundParameters object
+
+.OUTPUTS
+Hashtable/$PSBoundParameters object, with defined parameters removed.
+#>
+    [System.Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', 'FilteredParameters', Justification = "False Positive")]
+    [CmdletBinding()]
+    [OutputType('System.Collections.Hashtable')]
+    param(
+        [parameter(
+            Position = 0,
+            Mandatory = $true,
+            ValueFromPipeline = $true)]
+        [Hashtable]$Parameters,
+
+        [parameter(
+            Mandatory = $false)]
+        [array]$ParametersToRemove = @()
+
+    )
+
+    BEGIN {
+
+        $BaseParameters = [Collections.Generic.List[String]]@(
+            [System.Management.Automation.PSCmdlet]::CommonParameters +
+            [System.Management.Automation.PSCmdlet]::OptionalCommonParameters
+        )
+
+    }#begin
+
+    PROCESS {
+
+        $Parameters.Keys | ForEach-Object {
+
+            $FilteredParameters = @{ }
+
+        } {
+
+            if (($BaseParameters + $ParametersToRemove) -notcontains $PSItem) {
+
+                $FilteredParameters.Add($PSItem, $Parameters[$PSItem])
+
+            }
+
+        } { $FilteredParameters }
+
+    }#process
+
+    END { }#end
+
+}
+Function Convert-StringToPascalCase {
+    <#
+    .SYNOPSIS
+    This function convert a string in snake_case format to PascalCase
+    .PARAMETER String
+    Specifies the string in snake_case format.
+#>
+    param (
+        [Parameter(Mandatory = $true, Position = 0)]
+        [string]
+        $string
+    )
+
+    $string = (Get-Culture).TextInfo.ToTitleCase(($string.ToLower() -replace "_", " ")) -replace " ", ""
+    return $string
+}
+
+Function Convert-StringToSnakeCase {
+    <#
+    .SYNOPSIS
+    This function convert a string in convert a string in camelCase format to snake_case
+    .PARAMETER String
+    Specifies the string in snake_case format.
+#>
+    param (
+        [Parameter(Mandatory = $true, Position = 0)]
+        [string]
+        $string
+    )
+    # cope with pluralized abbreaviations such as TargetGroupARNs
+    if ($string -cmatch "[A-Z]{3,}s") {
+        $replacement_string = $string -creplace $matches[0], "_$($matches[0].ToLower())"
+
+        # handle when there was nothing before the plural pattern
+        if ($replacement_string.StartsWith("_") -and -not $string.StartsWith("_")) {
+            $replacement_string = $replacement_string.Substring(1)
+        }
+        $string = $replacement_string
+    }
+    $string = $string -creplace "(.)([A-Z][a-z]+)", '$1_$2'
+    $string = $string -creplace "([a-z0-9])([A-Z])", '$1_$2'
+    $string = $string.ToLower()
+
+    return $string
+}
+
+function ConvertTo-Boolean {
+    <#
+    .SYNOPSIS
+    This function Convert common values to Powershell boolean values $true and $false.
+    .PARAMETER value
+    Specifies the string to convert.
+#>
+    param
+    (
+        [Parameter(Mandatory = $false, ValueFromPipeline = $true)]
+        [string]
+        $value
+    )
+    switch ($value) {
+        "y" { return $true; }
+        "yes" { return $true; }
+        "true" { return $true; }
+        "t" { return $true; }
+        1 { return $true; }
+        "n" { return $false; }
+        "no" { return $false; }
+        "false" { return $false; }
+        "f" { return $false; }
+        0 { return $false; }
+    }
+}
+
 
 $spec = @{
     options             = @{
-
-        # CTMAGCFG.exe
-        # details in https://docs.bmc.com/docs/ctm/files/644067496/644067642/1/1463474322253/CTM_Admin_9.0.00.200_480027.pdf
-        # https://docs.bmc.com/docs/ctm/files/727402814/828957420/1/1538574713805/CTM_Admin_9.0.00.500_491283.pdf (page 205)
-        agent_to_server_port               = @{ type = "int"; default = 7005 }
-        server_to_agent_port               = @{ type = "int"; default = 7006 }
+        agent_to_server_port               = @{ type = "int"; choices = @(1024..65535) }
+        server_to_agent_port               = @{ type = "int"; choices = @(1024..65535) }
         primary_controlm_server_host       = @{ type = "str" } # do not use IP address
         authorized_controlm_server_hosts   = @{ type = "str" } # do not use IP address
-        diagnostic_level                   = @{ type = "int"; default = 0 }
-        comm_trace                         = @{ type = "bool"; default = $false } # (0-OFF|1-ON) : [0]
-        days_to_retain_log_files           = @{ type = "int"; default = 1 }
-        daily_log_file_enabled             = @{ type = "bool"; default = $true } # (Y|N)
-        tracker_event_port                 = @{ type = "int"; default = 7035 }
-        logical_agent_name                 = @{ type = "str"; default = "$env:COMPUTERNAME" }
-        java_new_ar                        = @{ type = "bool"; default = $false } #  N
-        persistent_connection              = @{ type = "bool"; default = $false } # (Y|N)
-        allow_comm_init                    = @{ type = "str"; default = "Y"; choices = @('Y', 'N', 'A') }
-        foreign_language_support           = @{ type = "str"; default = "LATIN-1"; choices = @('LATIN-1', 'CJK') }
-        ssl                                = @{ type = "bool"; default = $false } # (Y|N)
-        protocol_version                   = @{ type = "int"; default = 12 } # 12 = Synchronized with Control-m/Server
-        autoedit_inline                    = @{ type = "bool"; default = $true } # (Y|N)
-        listen_to_network_interface        = @{ type = "str"; default = '*ANY' } # (Y|N)
-        ctms_address_mode                  = @{ type = "str"; default = "" }  # (IP|)
-        timeout_for_agent_utilities        = @{ type = "int"; default = 600 }
-        tcpip_timeout                      = @{ type = "int"; default = 60 }
-        tracker_polling_interval           = @{ type = "int"; default = 60 }
-        limit_log_file_size_mb             = @{ type = "int"; default = 10; choices = @(1..1000) } #  Maximum size of log file MB. initializes the file size limit for log files. when the defined size is reached, the log file is closed and a new one is created.
-        limit_log_version                  = @{ type = "int"; default = 10; choices = @(1..99) } # Number of log file version. Sets the number of log files. When the number is reached, the older log file is deleted.
-        measure_usage_day                  = @{ type = "int"; default = 7 } # Determines the number of days to retain the files in the dailylog directory.
-
-        # CTMWINCFG.exe
-        logon_as_user                      = @{ type = "bool"; default = $false }
+        diagnostic_level                   = @{ type = "int"; choices = @(1..4) }
+        communication_trace                = @{ type = "bool" } # (0-OFF|1-ON) : [0]
+        days_to_retain_log_files           = @{ type = "int"; choices = @(1..99) }
+        daily_log_file_enabled             = @{ type = "bool" }
+        tracker_event_port                 = @{ type = "int"; choices = @(1025..65535) }
+        logical_agent_name                 = @{ type = "str" }
+        java_new_ar                        = @{ type = "bool" }
+        persistent_connection              = @{ type = "bool" }
+        allow_comm_init                    = @{ type = "bool" }
+        foreign_language_support           = @{ type = "str"; choices = @('LATIN-1', 'CJK') }
+        ssl                                = @{ type = "bool" }
+        protocol_version                   = @{ type = "int" }
+        autoedit_inline                    = @{ type = "bool" }
+        listen_to_network_interface        = @{ type = "str" }
+        ctms_address_mode                  = @{ type = "str"; choices = @('', 'IP') }
+        timeout_for_agent_utilities        = @{ type = "int" }
+        tcpip_timeout                      = @{ type = "int"; choices = @(0..999999) }
+        tracker_polling_interval           = @{ type = "int"; choices = @(1..86400) }
+        limit_log_file_size                = @{ type = "int"; choices = @(1..1000) }
+        limit_log_version                  = @{ type = "int"; choices = @(1..99) }
+        measure_usage_day                  = @{ type = "int" }
+        logon_as_user                      = @{ type = "bool" }
         logon_domain                       = @{ type = "str" }
-        job_children_inside_job_object     = @{ type = "bool"; default = $true }
-        job_statistics_to_sysout           = @{ type = "bool"; default = $true }
-        sysout_name                        = @{ type = "str"; default = "MEMNAME"; choices = @('MEMNAME', 'JOBNAME') }
-        wrap_parameters_with_double_quotes = @{ type = "int"; default = 4; choices = @(1, 2, 3, 4) } #  1 – This parameter is no longer relevant.  2 – Parameter values are always passed to the operating system without quotes. If quotes were specified in the job definition, they are removed before the parameter is passed onward by the agent. This option is compatible with the way that these parameters were managed in version 6.0.0x, or 6.1.01 with Fix Pack 1, 2, 3, or 4 installed. In this case, if a parameter value contains a blank, the operating system may consider each string as a separate parameter.  3 – This parameter is no longer relevant.  4 – Parameters are passed to the operating system in exactly the same way that they were specified in the job definition. No quotes are added or removed in this case. This option is compatible with the way that parameters were managed by version 2.24.0x .
-        run_user_logon_script              = @{ type = "bool"; default = $false }
-        cjk_encoding                       = @{ type = "str"; default = ""; choices = @('UTF-8', 'JAPANESE EUC', 'JAPANESE SHIFT-JIS', 'KOREAN EUC', 'SIMPLIFIED CHINESE GBK', 'SIMPLIFIED CHINESE GB', 'TRADITIONAL CHINESE EUC', 'TRADITIONAL CHINESE BIG') } # (CJK Encoding) Determines the CJK encoding used by Control-M/Agent to run jobs.
+        job_children_inside_job_object     = @{ type = "bool" }
+        job_statistics_to_sysout           = @{ type = "bool" }
+        sysout_name                        = @{ type = "str"; choices = @('MEMNAME', 'JOBNAME') }
+        wrap_parameters_with_double_quotes = @{ type = "int"; choices = @(1, 2, 3, 4) }
+        run_user_logon_script              = @{ type = "bool" }
+        cjk_encoding                       = @{ type = "str"; choices = @('', 'UTF-8', 'JAPANESE EUC', 'JAPANESE SHIFT-JIS', 'KOREAN EUC', 'SIMPLIFIED CHINESE GBK', 'SIMPLIFIED CHINESE GB', 'TRADITIONAL CHINESE EUC', 'TRADITIONAL CHINESE BIG') } # (CJK Encoding) Determines the CJK encoding used by Control-M/Agent to run jobs.
         default_printer                    = @{ type = "str" }
-        echo_job_commands_into_sysout      = @{ type = "bool"; default = $true }
+        echo_job_commands_into_sysout      = @{ type = "bool" }
         smtp_server_relay_name             = @{ type = "bool" }
-        smtp_port                          = @{ type = "int"; default = 25 }
-        smtp_sender_mail                   = @{ type = "str"; default = "control@m" }
+        smtp_port                          = @{ type = "int"; choices = @(0..65535) }
+        smtp_sender_mail                   = @{ type = "str" }
         smtp_sender_friendly_name          = @{ type = "str" }
-        smtp_replay_to_mail                = @{ type = "str" }
+        smtp_reply_to_mail                 = @{ type = "str" }
     }
     supports_check_mode = $true
 }
 
 # All entries to REG_SZ type
 $configuration = @{
-    agent_to_server_port               = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN\ATCMNDATA'
-    server_to_agent_port               = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN\AGCMNDATA'
-    primary_controlm_server_host       = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN\CTMSHOST'
-    authorized_controlm_server_hosts   = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN\CTMPERMHOSTS'
-    diagnostic_level                   = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN\DBGLVL'
-    comm_trace                         = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN\COMM_TRACE'
-    days_to_retain_log_files           = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN\LOGKEEPDAYS'
-    daily_log_file_enabled             = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN\AG_LOG_ON'
-    tracker_event_port                 = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN\TRACKER_EVENT_PORT'
-    logical_agent_name                 = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN\LOGICAL_AGENT_NAME'
-    java_new_ar                        = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN\JAVA_AR'
-    persistent_connection              = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN\PERSISTENT_CONNECTION'
-    allow_comm_init                    = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN\ALLOW_COMM_INIT'
-    foreign_language_support           = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN\I18N'
-    ssl                                = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN\COMMOPT'  # SSL=N
-    protocol_version                   = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN\PROTOCOL_VERSION'
-    autoedit_inline                    = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN\USE_JOB_VARIABLES'
-    listen_to_network_interface        = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN\LISTEN_INTERFACE'
-    ctms_address_mode                  = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN\CTMS_ADDR_MODE'
-    timeout_for_agent_utilities        = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN\UTTIMEOUT'
-    tcpip_timeout                      = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN\TCP_IP_TIMEOUT'
-    tracker_polling_interval           = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN\EVENT_TIMEOUT'
-    limit_log_file_size                = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG\LIMIT_LOG_FILE_SIZE'
-    limit_log_version                  = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG\LIMIT_LOG_VERSIONS'
-    measure_usage_day                  = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG\MEASURE_USAGE_DAYS'
-
-    logon_as_user                      = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN\LOGON_AS_USER'
-    logon_domain                       = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN\DOMAIN'
-    job_children_inside_job_object     = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN\JOB_WAIT'
-    job_statistics_to_sysout           = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN\JOB_STATISTIC'
-    sysout_name                        = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN\OUTPUT_NAME'
-    wrap_parameters_with_double_quotes = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN\WRAP_PARAM_QUOTES'
-    run_user_logon_script              = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN\RUN_USER_LOGON_SCRIPT'
-    cjk_encoding                       = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN\APPLICATION_LOCALE'
-    default_printer                    = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN\DFTPRT'
-    echo_job_commands_into_sysout      = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN\ECHO_OUTPUT'
-    smtp_server_relay_name             = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN\SMTP_SERVER_NAME'
-    smtp_port                          = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN\SMTP_PORT_NUMBER'
-    smtp_sender_mail                   = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN\SMTP_SENDER_EMAIL'
-    smtp_sender_friendly_name          = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN\SMTP_SENDER_FRIENDLY_NAME'
-    smtp_replay_to_mail                = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN\SMTP_REPLY_TO_EMAIL'
+    agent_to_server_port               = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'ATCMNDATA' ; Default = '7005' }
+    server_to_agent_port               = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'AGCMNDATA' ; Default = '7006' }
+    primary_controlm_server_host       = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'CTMSHOST' ; Default = '' }
+    authorized_controlm_server_hosts   = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'CTMPERMHOSTS' ; Default = '' }
+    diagnostic_level                   = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'DBGLVL'; Default = '0' }
+    communication_trace                = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'COMM_TRACE'; Default = '0' }
+    days_to_retain_log_files           = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'LOGKEEPDAYS'; Default = '1' }
+    daily_log_file_enabled             = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'AG_LOG_ON'; Default = 'Y' }
+    tracker_event_port                 = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'TRACKER_EVENT_PORT'; Default = '7035' }
+    logical_agent_name                 = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'LOGICAL_AGENT_NAME' ; Default = "$env:COMPUTERNAME" }
+    java_new_ar                        = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'JAVA_AR' ; Default = 'N' }
+    persistent_connection              = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'PERSISTENT_CONNECTION'; Default = 'N' }
+    allow_comm_init                    = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'ALLOW_COMM_INIT'; Default = 'Y' }
+    foreign_language_support           = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'I18N'; Default = 'LATIN-1' }
+    ssl                                = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'COMMOPT'; Default = 'SSL=N' }
+    protocol_version                   = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'PROTOCOL_VERSION'; Default = '12' }
+    autoedit_inline                    = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'USE_JOB_VARIABLES'; Default = 'Y' }
+    listen_to_network_interface        = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'LISTEN_INTERFACE'; Default = '*ANY' }
+    ctms_address_mode                  = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'CTMS_ADDR_MODE'; Default = '' }
+    timeout_for_agent_utilities        = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'UTTIMEOUT'; Default = '600' }
+    tcpip_timeout                      = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'TCP_IP_TIMEOUT'; Default = '60' }
+    tracker_polling_interval           = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'EVENT_TIMEOUT' ; Default = '60' }
+    limit_log_file_size                = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'LIMIT_LOG_FILE_SIZE'; Default = '10' }
+    limit_log_version                  = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'LIMIT_LOG_VERSIONS'; Default = '10' }
+    measure_usage_day                  = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'MEASURE_USAGE_DAYS'; Default = '7' }
+    logon_as_user                      = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'LOGON_AS_USER'; Default = 'N' }
+    logon_domain                       = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'DOMAIN'; Default = '' }
+    job_children_inside_job_object     = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'JOB_WAIT'; Default = 'Y' }
+    add_job_statistics_to_sysout       = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'JOB_STATISTIC'; Default = 'Y' }
+    sysout_name                        = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'OUTPUT_NAME'; Default = 'MEMNAME' }
+    wrap_parameters_with_double_quotes = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'WRAP_PARAM_QUOTES'; Default = '4' }
+    run_user_logon_script              = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'RUN_USER_LOGON_SCRIPT'; Default = 'N' }
+    cjk_encoding                       = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'APPLICATION_LOCALE'; Default = '' }
+    default_printer                    = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'DFTPRT'; Default = '' }
+    echo_job_commands_into_sysout      = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'ECHO_OUTPUT'; Default = 'Y' }
+    smtp_server_relay_name             = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'SMTP_SERVER_NAME'; Default = '' }
+    smtp_port                          = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'SMTP_PORT_NUMBER'; Default = '25' }
+    smtp_sender_mail                   = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'SMTP_SENDER_EMAIL'; Default = 'control@m' }
+    smtp_sender_friendly_name          = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'SMTP_SENDER_FRIENDLY_NAME'; Default = '' }
+    smtp_reply_to_mail                 = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'SMTP_REPLY_TO_EMAIL'; Default = '' }
 }
 
-$module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
+Function Get-ControlMParameter {
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [string]
+        $Name
+    )
 
-$agent_to_server_port = $module.Params.agent_to_server_port
+    $optionName = Convert-StringToSnakeCase -String $Name
+    if ( -not $configuration.ContainsKey($optionName) ) {
+        Throw "The configuration hashtable does not contain the $optionName setting converted from the $Name parameter name"
+    }
+
+    $RegistryInfo = $configuration[$optionName]
+    Get-ChildItem -Path Registry::$($RegistryInfo.Path) -Name $RegistryInfo.Name -ErrorAction SilentlyContinue -ErrorVariable RegistryError -OutVariable RegistryEntry
+    $RegistryValue = if ($RegistryError) { $RegistryInfo.Default } else { $RegistryEntry.$($RegistryInfo.Name) }
+
+    $ParameterList = (Get-Command -Name 'Test-TargetResource').Parameters;
+    if ($Name -eq 'ssl') {
+        $Value = ($RegistryValue -contains 'SSL=Y')
+    }
+    else {
+        $ParameterType = $ParameterList[$Name].ParameterType.Name
+        $Value = switch ($ParameterType) {
+            "Int32" {
+                [int]$int = $null
+                $r = [int32]::TryParse($RegistryValue, [ref]$int); $int; break
+            }
+            "Boolean" {
+                ConvertTo-Boolean -Value $RegistryValue; break
+            }
+            default {
+                [string]$RegistryValue
+            }
+        }
+    }
+    return $Value
+}
+
+Function Set-ControlMParameter {
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [string]
+        $Name,
+        $Value
+    )
+    $optionName = Convert-StringToSnakeCase -String $Name
+    if ( -not $configuration.ContainsKey($optionName) ) {
+        Throw "The configuration hashtable does not contain the $optionName setting converted from the $Name parameter name"
+    }
+
+    $RegistryInfo = $configuration[$optionName]
+
+    if ($optionName -eq 'ssl') {
+        Get-ChildItem -Path Registry::$($RegistryInfo.Path) -Name $RegistryInfo.Name -ErrorAction SilentlyContinue -ErrorVariable RegistryError -OutVariable RegistryEntry
+        $RegistryValue = if ($RegistryError) { $RegistryInfo.Default } else { $RegistryEntry.$($RegistryInfo.Name) }
+        $NewSetting = if ([bool]$Value) { 'SSL=Y' } else { 'SSL=N' }
+        $NewValue = if ([string]::IsNullOrEmpty($Value)) { $NewSetting } else { $RegistryValue -replace "SSL=[N|Y]", $NewSetting }
+    }
+    elseif ($optionName -eq 'communication_trace') {
+        $NewSetting = if ([bool]$Value) { '1' } else { '0' }
+    }
+    elseif ($value -is [bool]) {
+        $NewSetting = if ([bool]$Value) { 'Y' } else { 'N' }
+    }
+    elseif ($value -is [int]) {
+        $NewSetting = [string]$NewValue
+    }
+    else {
+        $NewSetting = [string]$NewValue
+    }
+
+    if (-not $module.CheckMode) {
+        Set-ItemProperty -Path Registry::$($RegistryInfo.Path) -Name $RegistryInfo.Name -Value $NewValue -ErrorAction SilentlyContinue -ErrorVariable RegistryError
+    }
+    return ($null -ne $RegistryError)
+}
+
+Function Get-TargetResource {
+    [OutputType('System.Collections.Hashtable')]
+
+    $TargetResource = @{ }
+
+    $ParameterList = (Get-Command -Name 'Test-TargetResource').Parameters
+
+    $BaseParameters = [Collections.Generic.List[String]]@(
+        [System.Management.Automation.PSCmdlet]::CommonParameters +
+        [System.Management.Automation.PSCmdlet]::OptionalCommonParameters
+    )
+
+    foreach ($Parameter in $ParameterList) {
+
+        $ParameterNames = $Parameter.Values.Name
+        foreach ($ParameterName in $ParameterNames) {
+            if ($BaseParameters -contains $ParameterName) {
+                continue
+            }
+            $Value = Get-ControlMParameter -Name $ParameterName
+            $targetResource[$ParameterName] = $Value
+        }
+    }
+    return $targetResource
+}
+
+Function Test-TargetResource {
+    [CmdletBinding()]
+    [OutputType([System.Boolean])]
+    param (
+        [ValidateRange(1024, 65535)]
+        [int]
+        $AgentToServerPort,
+        [ValidateRange(1024, 65535)]
+        [int]
+        $ServerToAgentPort,
+        [string]
+        $PrimaryControlmServerHost,
+        [string]
+        $AuthorizedControlmServerHosts,
+        [ValidateRange(0, 4)]
+        [int]
+        $DiagnosticLevel,
+        [bool]
+        $CommunicationTrace,
+        [ValidateRange(1, 99)]
+        [int]
+        $DaysToRetainLogFiles,
+        [bool]
+        $DailyLogFileEnabled = $true,
+        [ValidateRange(1024, 65535)]
+        [int]
+        $TrackerEventPort,
+        [string]
+        $LogicalAgentName,
+        [bool]
+        $PersistentConnection,
+        [bool]
+        $AllowCommInit,
+        [ValidateSet("LATIN-1", "CJK")]
+        [string]
+        $ForeignLanguageSupport,
+        [bool]
+        $SSL,
+        [ValidateRange(1, 12)]
+        [int]
+        $ProtocolVersion,
+        [bool]
+        $AutoeditInline,
+        [string]
+        $ListenToNetworkInterface,
+        [ValidateSet("", "IP")]
+        [string]
+        $CtmsAddressMode,
+        [int]
+        $TimeoutForAgentUtilities,
+        [ValidateRange(0, 999999)]
+        [int]
+        $TcpipTimeout,
+        [ValidateRange(1, 86400)]
+        [int]
+        $TrackerPollingInterval,
+        [validateRange(1, 1000)]
+        [int]
+        $LimitLogFileSize,
+        [validateRange(0, 99)]
+        [int]
+        $LimitLogVersion,
+        [validateRange(1, 99)]
+        [int]
+        $MeasureUsageDay,
+        [bool]
+        $LogonAsUser,
+        [string]
+        $LogonDomain,
+        [bool]
+        $JobChildrenInsideJobObject,
+        [bool]
+        $AddJobStatisticsToSysout,
+        [ValidateSet("MEMNAME", "JOBNAME")]
+        [string]
+        $SysoutName,
+        [validateRange(1, 4)]
+        [int]
+        $WrapParametersWithDoubleQuotes,
+        [bool]
+        $RunUserLogonScript,
+        [ValidateSet("", "UTF-8", "JAPANESE EUC", "JAPANESE SHIFT-JIS", "KOREAN EUC", "SIMPLIFIED CHINESE GBK", "SIMPLIFIED CHINESE GB", "TRADITIONAL CHINESE EUC", "TRADITIONAL CHINESE BIG5")]
+        [string]
+        $CjkEncoding,
+        [string]
+        $DefaultPrinter,
+        [bool]
+        $EchoJobCommandsIntoSysout,
+        [string]
+        $SmtpServerRelayName,
+        [ValidateRange(0, 65535)]
+        [int]
+        $SmtpPort,
+        [ValidateLength(0, 99)]
+        [string]
+        $SmtpSenderMail,
+        [string]
+        $SmtpSenderFriendlyName,
+        [string]
+        $SmtpReplyToMail
+    )
+    $isCompliant = $true;
+
+    $resources = Get-TargetResource
+    if (-not ($resources -is [hashtable])) {
+        $resources = @($resources)
+    }
+
+    if ($resources.Length -eq 0) {
+        return $false
+    }
+    $options = $PSBoundParameters | Get-ModuleParameter
+
+    foreach ($option in $options.GetEnumerator()) {
+        $optionName = $option.Key
+        if ($resources.ContainsKey($optionName)) {
+            if ($resources[$optionName] -ne $option.Value) {
+                $isCompliant = $false
+                break
+            }
+        }
+    }
+    return $isCompliant
+}
+
+function Set-TargetResource {
+    param (
+        [ValidateRange(1024, 65535)]
+        [int]
+        $AgentToServerPort,
+        [ValidateRange(1024, 65535)]
+        [int]
+        $ServerToAgentPort,
+        [string]
+        $PrimaryControlmServerHost,
+        [string]
+        $AuthorizedControlmServerHosts,
+        [ValidateRange(0, 4)]
+        [int]
+        $DiagnosticLevel,
+        [bool]
+        $CommunicationTrace,
+        [ValidateRange(1, 99)]
+        [int]
+        $DaysToRetainLogFiles,
+        [bool]
+        $DailyLogFileEnabled = $true,
+        [ValidateRange(1024, 65535)]
+        [int]
+        $TrackerEventPort,
+        [string]
+        $LogicalAgentName,
+        [bool]
+        $PersistentConnection,
+        [bool]
+        $AllowCommInit,
+        [ValidateSet("LATIN-1", "CJK")]
+        [string]
+        $ForeignLanguageSupport,
+        [bool]
+        $SSL,
+        [ValidateRange(1, 12)]
+        [int]
+        $ProtocolVersion,
+        [bool]
+        $AutoeditInline,
+        [string]
+        $ListenToNetworkInterface,
+        [ValidateSet("", "IP")]
+        [string]
+        $CtmsAddressMode,
+        [int]
+        $TimeoutForAgentUtilities,
+        [ValidateRange(0, 999999)]
+        [int]
+        $TcpipTimeout,
+        [ValidateRange(1, 86400)]
+        [int]
+        $TrackerPollingInterval,
+        [validateRange(1, 1000)]
+        [int]
+        $LimitLogFileSize,
+        [validateRange(0, 99)]
+        [int]
+        $LimitLogVersion,
+        [validateRange(1, 99)]
+        [int]
+        $MeasureUsageDay,
+        [bool]
+        $LogonAsUser,
+        [string]
+        $LogonDomain,
+        [bool]
+        $JobChildrenInsideJobObject,
+        [bool]
+        $AddJobStatisticsToSysout,
+        [ValidateSet("MEMNAME", "JOBNAME")]
+        [string]
+        $SysoutName,
+        [validateRange(1, 4)]
+        [int]
+        $WrapParametersWithDoubleQuotes,
+        [bool]
+        $RunUserLogonScript,
+        [ValidateSet("", "UTF-8", "JAPANESE EUC", "JAPANESE SHIFT-JIS", "KOREAN EUC", "SIMPLIFIED CHINESE GBK", "SIMPLIFIED CHINESE GB", "TRADITIONAL CHINESE EUC", "TRADITIONAL CHINESE BIG5")]
+        [string]
+        $CjkEncoding,
+        [string]
+        $DefaultPrinter,
+        [bool]
+        $EchoJobCommandsIntoSysout,
+        [string]
+        $SmtpServerRelayName,
+        [ValidateRange(0, 65535)]
+        [int]
+        $SmtpPort,
+        [ValidateLength(0, 99)]
+        [string]
+        $SmtpSenderMail,
+        [string]
+        $SmtpSenderFriendlyName,
+        [string]
+        $SmtpReplyToMail
+    )
+
+    $changed = $false
+
+    $options = $PSBoundParameters | Get-ModuleParameter
+
+    $isCompliant = Test-TargetResource @options
+    if ($isCompliant) {
+        return $changed
+    }
+    $resources = Get-TargetResource
+
+    if (-not ($resources -is [hashtable])) {
+        $resources = @($resources)
+    }
+
+    foreach ($option in $options.GetEnumerator()) {
+        $ParameterName = $option.Key
+
+        if ($resources.ContainsKey($ParameterName)) {
+
+            if ($resources[$ParameterName] -ne $option.Value) {
+
+                $optionName = Convert-StringToSnakeCase -String $ParameterName
+
+                if (Set-ControlMParameter -Name $ParameterName -Value $option.Value) {
+                    $module.Diff.before.$optionName = $resources[$ParameterName]
+                    $module.Diff.after.$optionName = $option.Value
+                    $module.Result.changed = $true
+                }
+                if ($ParameterName -eq 'PrimaryControlmServerHost') {
+                    if (-not $resources['AuthorizedControlmServerHosts'] -and -not $options['AuthorizedControlmServerHosts']) {
+                        if (Set-ControlMParameter -Name 'AuthorizedControlmServerHosts' -Value $option.Value) {
+                            $module.Diff.before.primary_controlm_server_host = ''
+                            $module.Diff.after.primary_controlm_server_host = $option.Value
+                            $module.Result.changed = $true
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+$BaseParameters = [Collections.Generic.List[String]]@(
+    [System.Management.Automation.PSCmdlet]::CommonParameters +
+    [System.Management.Automation.PSCmdlet]::OptionalCommonParameters
+)
+
+$ParameterList = (Get-Command -Name 'Test-TargetResource').Parameters;
+
+$module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
+$module.Diff.before = @{ }
+$module.Diff.after = @{ }
+
+$params = @{ }
+
+foreach ($Parameter in $ParameterList) {
+
+    $ParameterNames = $Parameter.Values.Name
+    foreach ($ParameterName in $ParameterNames) {
+        if ($BaseParameters -contains $ParameterName) {
+            continue
+        }
+        $optionName = Convert-StringToSnakeCase -String $ParameterName
+        if ($module.Params.$optionName) {
+            $params.$ParameterName = $module.Params.$optionName
+        }
+    }
+}
+
+Set-TargetResource @params
+
+$module.ExitJson()
+

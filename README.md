@@ -6,6 +6,10 @@
 
 ## Examples
 
+## References
+
+*<https://docs.bmc.com/docs/ctm/files/727402814/828957420/1/1538574713805/CTM_Admin_9.0.00.500_491283.pdf> (page 205)
+
 ## Authors
 
 - [Stéphane Bilqué](https://github.com/sbilque)
