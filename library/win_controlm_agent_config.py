@@ -4,7 +4,7 @@
 # This is a windows documentation stub.  Actual code lives in the .ps1
 # file of the same name.
 
-# Copyright 2019 Informatique CDC. All rights reserved.
+# Copyright 2020 Informatique CDC. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -30,11 +30,11 @@ ANSIBLE_METADATA = {'metadata_version': '1.0',
 DOCUMENTATION = r'''
 ---
 module: win_controlm_agent_config
-short_description: Manage the Control/M Agent configuration
+short_description: Manipulate the configuration of a Control/M Agent
 author:
     - Stéphane Bilqué (@sbilque) Informatique CDC
 description:
-    - Ansible module to change the Control/M Agent configuration on a Windows host.
+    - This Ansible module allows to change the Control/M Agent configuration on a Windows host.
     - Control/M Agent configurations use both `CTMWINCFG` or `CTMAGCFG` command for setting configuration.
     - This module provides an implementation for working with Agent configuration in a deterministic way. Commands are not used. This module make change in registry locations.
 options:
@@ -42,27 +42,23 @@ options:
         description:
             - Defines the port number in the Control-M/Agent computer where data is received from the Control-M/Server computer.
             - The value assigned to this parameter must correspond to the value assigned to the Server-to-Agent Port Number field in the configuration file on the corresponding ControlM/Agent computer.
-        required: 'No'
         default: 7005
         type: int
     server_to_agent_port:
         description:
             - Defines the port number between 1024 and 65535 that receives data from the Control-M/Agent computer.
             - This value must match the Agent-to-Server Port Number in Control-M/Server. The value is the c(COMTIMOUT) communication job-tracking timeout in seconds.
-        required: 'No'
         default: 7006
         type: int
     primary_controlm_server_host:
         description:
             - Defines the hostname of the computer where the current Control-M/Server submits jobs to the Control-M/Agent.
-        required: 'No'
         type: str
     authorized_controlm_server_hosts:
         description:
             - Defines a list of backup servers which can replace the primary server if it fails. The Control-M/Agent only accept requests from servers on this list.
             - You cannot submit jobs to the same ControlM/Agent if there is more than one active Control-M/Server.
             - Another Control-M/Agent instance must be installed with unique ports to support this configuration or job status updates corrupt.
-        required: 'No'
         type: str
     diagnostic_level:
         description:
@@ -123,7 +119,7 @@ options:
             - Determines whether SSL is used to encrypt the communication between Control-M/Server and the ControlM/Agent.
         default: No
         type: bool
-    protocol_version:
+    server_agent_protocol_version:
         description:
             - Server-Agent communication protocol version.
             - Valid values: 12 or lower.
@@ -149,8 +145,7 @@ options:
         default: ""
     timeout_for_agent_utilities:
         description:
-            - Maximum time (in seconds) the agent waits after sending a request to Control-M/Server. This timeout interval should be
-longer than the TCP/IP Timeout.
+            - Maximum time (in seconds) the agent waits after sending a request to Control-M/Server. This timeout interval should be longer than the TCP/IP Timeout.
         type: int
         default: 600
     tcpip_timeout:
@@ -216,7 +211,7 @@ longer than the TCP/IP Timeout.
             - If this parameter is set to c(No), statistics are not added to the OUTPUT file.
         type: bool
         default: Yes
-    sysout_name:
+    job_output_name:
         description:
             - Determines the prefix for the OUTPUT file name.
             - If this parameter is set to c(MEMNAME), the OUTPUT file prefix is the MEMNAME of the job.
@@ -235,7 +230,7 @@ longer than the TCP/IP Timeout.
         default: 4
     run_user_logon_script:
         description:
-            - Indication if a user-defined logon script should be run by the Control-M/Agent before running the standard user logon script.
+            - Indicates wether a user-defined logon script should be run by the Control-M/Agent before running the standard user logon script.
             - If this parameter is set to c(Yes), the user-defined logon script is run, if it exists.
             - If this parameter is set to c(No), the user-defined logon script is not run
         type: bool
@@ -304,4 +299,192 @@ EXAMPLES = r'''
 '''
 
 RETURN = r'''
+config:
+    description: The retrieved configuration.
+    returned: success
+    type: dict
+    contains:
+        agent_to_server_port:
+            description: The port number in the Control-M/Agent computer where data is received from the Control-M/Server computer.
+            returned: success
+            type: int
+        allow_comm_init:
+            description: Indicates whether the agent can open a connection to the server when working in persistent connection mode.
+            returned: success
+            type: bool
+        authorized_controlm_server_hosts:
+            description: A list of backup servers which can replace the primary server if it fails.
+            returned: success
+            type: str
+        autoedit_inline:
+            description: Indicates whether all variables will be set as environment variables in the script.
+            returned: success
+            type: bool
+        cjk_encoding:
+            description: The CJK encoding used by Control-M/Agent to run jobs.
+            returned: success
+            type: str
+        communication_trace:
+            description: Indicates whether communication packets that Control-M/Agent sends to and receives from Control-M/Server are written to a file.
+            returned: success
+            type: bool
+        ctms_address_mode:
+            description: Indicates if the IP address is used instead of the host name.
+            returned: success
+            type: str
+        daily_log_file_enabled:
+            description: Indicates if the ctmag_<year><month><day>.log file is generated.
+            returned: success
+            type: bool
+        days_to_retain_log_files:
+            description: Number of days to retain agent proclog files.
+            returned: success
+            type: ints
+        default_printer:
+            description: The default printer for job OUTPUT files.
+            returned: success
+            type: str
+        diagnostic_level:
+            description: The debug level.
+            returned: success
+            type: int
+        echo_job_commands_into_sysout:
+            description: Indicates whether to print commands in the OUTPUT of a job.
+            returned: success
+            type: bool
+        foreign_language_support:
+            description: Indicates whether the system is configured for CJK languages or Latin1 languages.
+            returned: success
+            type: str
+        job_children_inside_job_object:
+            description: Indicates whether procedures invoked by a job can be run outside the Job Object.
+            returned: success
+            type: bool
+        limit_log_file_size:
+            description: The maximum size (MB) of diagnostic log files for a process or a thread.
+            returned: success
+            type: int
+        limit_log_version:
+            description: The number of generations of diagnostic log information to keep for a process or a thread.
+            returned: success
+            type: int
+        listen_to_network_interface:
+            description: The network interface the agent is listening on.
+            returned: success
+            type: str
+        logical_agent_name:
+            description: The logical name of the agent.
+            returned: success
+            type: str
+        logon_as_user:
+            description: Indicates whether the user account is used for the services to log on to.
+            returned: success
+            type: bool
+        logon_domain:
+            description: The logon domain of the user account.
+            returned: success
+            type: str
+        measure_usage_day:
+            description: The number of days to retain the files in the dailylog directory.
+            returned: success
+            type: int
+        persistent_connection:
+            description: Indicates whether NS process creates a persistent connection with the agent and manages the session with this agent.
+            returned: success
+            type: bool
+        primary_controlm_server_host:
+            description: The hostname of the computer where the current Control-M/Server submits jobs to the Control-M/Agent.
+            returned: success
+            type: str
+        server_agent_protocol_version:
+            description: The server-Agent communication protocol version.
+            returned: success
+            type: int
+        run_user_logon_script:
+            description: Indicates wether a user-defined logon script should be run by the Control-M/Agent before running the standard user logon script.
+            returned: success
+            type: bool
+        server_to_agent_port:
+            description: The port number that receives data from the Control-M/Agent computer.
+            returned: success
+            type: int
+        smtp_port:
+            description: The port number on which the SMTP server communicates.
+            returned: success
+            type: int
+        smtp_reply_to_mail:
+            description: The e-mail address to which to send replies.
+            returned: success
+            type: str
+        smtp_sender_friendly_name:
+            description: The name or alias that appears on the e-mail sent.
+            returned: success
+            type: str
+        smtp_sender_mail:
+            description: The e-mail address of the sender.
+            returned: success
+            type: str
+        smtp_server_relay_name:
+            description: The name of the SMTP server.
+            returned: success
+            type: str
+        ssl:
+            description: ndicates whether SSL is used to encrypt the communication between Control-M/Server and the ControlM/Agent.
+            returned: success
+            type: bool
+        job_output_name:
+            description: The prefix for the OUTPUT file name.
+            returned: success
+            type: str
+        tcpip_timeout:
+            description: The communication job-tracking timeout in seconds.
+            returned: success
+            type: int
+        timeout_for_agent_utilities:
+            description: The maximum time (in seconds) the agent waits after sending a request to Control-M/Server.
+            returned: success
+            type: int
+        tracker_event_port:
+            description: The number of the port for sending messages to the Tracker process when jobs end.
+            returned: success
+            type: int
+        tracker_polling_interval:
+            description: The tracker event timeout in seconds.
+            returned: success
+            type: int
+        wrap_parameters_with_double_quotes:
+            description: Indicates how parameter values (%%PARMn....%%PARMx) are managed by Control-M/Agent for Microsoft Windows.
+            returned: success
+            type: int
+        default_agent_name:
+            description: The agent name.
+            returned: success
+            type: str
+            sample: Default
+        cm_name:
+            description: The Control/M application version.
+            returned: success
+            type: str
+            sample: WIN
+        cm_type:
+            description: The Control/M plateforme type.
+            returned: success
+            type: str
+            sample: WIN2K
+        agent_version: The agent version.
+            description:
+            returned: success
+            type: str
+        fd_number:
+            description: The unique identifier of the agent.
+            returned: success
+            type: str
+        fix_number: The unique identifier of the fix pack.
+            description:
+            returned: success
+            type: str
+        agent_directory:
+            description: The installation folder of the agent.
+            returned: success
+            type: str
 '''

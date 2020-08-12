@@ -1,156 +1,6 @@
 #!powershell
 
 #AnsibleRequires -CSharpUtil Ansible.Basic
-function Get-ModuleParameter {
-    <#
-.SYNOPSIS
-Removes defined parameter values from a passed $PSBoundParameters object
-
-.DESCRIPTION
-When passed a $PSBoundParameters hashtable, this function removes standard parameters
-(like Verbose/Confirm etc) and returns the passed object with only the non-standard
-parameters left in place.
-
-.PARAMETER Parameters
-This is the input object from which to remove the default set of parameters.
-It is intended to accept the $PSBoundParameters object from another function.
-
-.PARAMETER ParametersToRemove
-Accepts an array of any additional parameter keys which should be removed from the passed input
-object. Specifying additional parameter names/keys here means that the default value assigned
-to the BaseParameters parameter will remain unchanged.
-
-.EXAMPLE
-$PSBoundParameters | Get-ModuleParameter
-
-.EXAMPLE
-Get-ModuleParameter -Parameters $PSBoundParameters -ParametersToRemove param1,param2
-
-.INPUTS
-$PSBoundParameters object
-
-.OUTPUTS
-Hashtable/$PSBoundParameters object, with defined parameters removed.
-#>
-    [System.Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', 'FilteredParameters', Justification = "False Positive")]
-    [CmdletBinding()]
-    [OutputType('System.Collections.Hashtable')]
-    param(
-        [parameter(
-            Position = 0,
-            Mandatory = $true,
-            ValueFromPipeline = $true)]
-        [Hashtable]$Parameters,
-
-        [parameter(
-            Mandatory = $false)]
-        [array]$ParametersToRemove = @()
-
-    )
-
-    BEGIN {
-
-        $BaseParameters = [Collections.Generic.List[String]]@(
-            [System.Management.Automation.PSCmdlet]::CommonParameters +
-            [System.Management.Automation.PSCmdlet]::OptionalCommonParameters
-        )
-
-    }#begin
-
-    PROCESS {
-
-        $Parameters.Keys | ForEach-Object {
-
-            $FilteredParameters = @{ }
-
-        } {
-
-            if (($BaseParameters + $ParametersToRemove) -notcontains $PSItem) {
-
-                $FilteredParameters.Add($PSItem, $Parameters[$PSItem])
-
-            }
-
-        } { $FilteredParameters }
-
-    }#process
-
-    END { }#end
-
-}
-Function Convert-StringToPascalCase {
-    <#
-    .SYNOPSIS
-    This function convert a string in snake_case format to PascalCase
-    .PARAMETER String
-    Specifies the string in snake_case format.
-#>
-    param (
-        [Parameter(Mandatory = $true, Position = 0)]
-        [string]
-        $string
-    )
-
-    $string = (Get-Culture).TextInfo.ToTitleCase(($string.ToLower() -replace "_", " ")) -replace " ", ""
-    return $string
-}
-
-Function Convert-StringToSnakeCase {
-    <#
-    .SYNOPSIS
-    This function convert a string in convert a string in camelCase format to snake_case
-    .PARAMETER String
-    Specifies the string in snake_case format.
-#>
-    param (
-        [Parameter(Mandatory = $true, Position = 0)]
-        [string]
-        $string
-    )
-    # cope with pluralized abbreaviations such as TargetGroupARNs
-    if ($string -cmatch "[A-Z]{3,}s") {
-        $replacement_string = $string -creplace $matches[0], "_$($matches[0].ToLower())"
-
-        # handle when there was nothing before the plural pattern
-        if ($replacement_string.StartsWith("_") -and -not $string.StartsWith("_")) {
-            $replacement_string = $replacement_string.Substring(1)
-        }
-        $string = $replacement_string
-    }
-    $string = $string -creplace "(.)([A-Z][a-z]+)", '$1_$2'
-    $string = $string -creplace "([a-z0-9])([A-Z])", '$1_$2'
-    $string = $string.ToLower()
-
-    return $string
-}
-
-function ConvertTo-Boolean {
-    <#
-    .SYNOPSIS
-    This function Convert common values to Powershell boolean values $true and $false.
-    .PARAMETER value
-    Specifies the string to convert.
-#>
-    param
-    (
-        [Parameter(Mandatory = $false, ValueFromPipeline = $true)]
-        [string]
-        $value
-    )
-    switch ($value) {
-        "y" { return $true; }
-        "yes" { return $true; }
-        "true" { return $true; }
-        "t" { return $true; }
-        1 { return $true; }
-        "n" { return $false; }
-        "no" { return $false; }
-        "false" { return $false; }
-        "f" { return $false; }
-        0 { return $false; }
-    }
-}
-
 
 $spec = @{
     options             = @{
@@ -169,7 +19,7 @@ $spec = @{
         allow_comm_init                    = @{ type = "bool" }
         foreign_language_support           = @{ type = "str"; choices = @('LATIN-1', 'CJK') }
         ssl                                = @{ type = "bool" }
-        protocol_version                   = @{ type = "int" }
+        server_agent_protocol_version                   = @{ type = "int" }
         autoedit_inline                    = @{ type = "bool" }
         listen_to_network_interface        = @{ type = "str" }
         ctms_address_mode                  = @{ type = "str"; choices = @('', 'IP') }
@@ -183,7 +33,7 @@ $spec = @{
         logon_domain                       = @{ type = "str" }
         job_children_inside_job_object     = @{ type = "bool" }
         job_statistics_to_sysout           = @{ type = "bool" }
-        sysout_name                        = @{ type = "str"; choices = @('MEMNAME', 'JOBNAME') }
+        job_output_name                        = @{ type = "str"; choices = @('MEMNAME', 'JOBNAME') }
         wrap_parameters_with_double_quotes = @{ type = "int"; choices = @(1, 2, 3, 4) }
         run_user_logon_script              = @{ type = "bool" }
         cjk_encoding                       = @{ type = "str"; choices = @('', 'UTF-8', 'JAPANESE EUC', 'JAPANESE SHIFT-JIS', 'KOREAN EUC', 'SIMPLIFIED CHINESE GBK', 'SIMPLIFIED CHINESE GB', 'TRADITIONAL CHINESE EUC', 'TRADITIONAL CHINESE BIG') } # (CJK Encoding) Determines the CJK encoding used by Control-M/Agent to run jobs.
@@ -215,7 +65,7 @@ $configuration = @{
     allow_comm_init                    = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'ALLOW_COMM_INIT'; Default = 'Y' }
     foreign_language_support           = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'I18N'; Default = 'LATIN-1' }
     ssl                                = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'COMMOPT'; Default = 'SSL=N' }
-    protocol_version                   = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'PROTOCOL_VERSION'; Default = '12' }
+    server_agent_protocol_version                   = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'PROTOCOL_VERSION'; Default = '12' }
     autoedit_inline                    = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'USE_JOB_VARIABLES'; Default = 'Y' }
     listen_to_network_interface        = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'LISTEN_INTERFACE'; Default = '*ANY' }
     ctms_address_mode                  = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'CTMS_ADDR_MODE'; Default = '' }
@@ -229,7 +79,7 @@ $configuration = @{
     logon_domain                       = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'DOMAIN'; Default = '' }
     job_children_inside_job_object     = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'JOB_WAIT'; Default = 'Y' }
     add_job_statistics_to_sysout       = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'JOB_STATISTIC'; Default = 'Y' }
-    sysout_name                        = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'OUTPUT_NAME'; Default = 'MEMNAME' }
+    job_output_name                        = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'OUTPUT_NAME'; Default = 'MEMNAME' }
     wrap_parameters_with_double_quotes = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'WRAP_PARAM_QUOTES'; Default = '4' }
     run_user_logon_script              = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'RUN_USER_LOGON_SCRIPT'; Default = 'N' }
     cjk_encoding                       = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'APPLICATION_LOCALE'; Default = '' }
@@ -240,9 +90,223 @@ $configuration = @{
     smtp_sender_mail                   = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'SMTP_SENDER_EMAIL'; Default = 'control@m' }
     smtp_sender_friendly_name          = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'SMTP_SENDER_FRIENDLY_NAME'; Default = '' }
     smtp_reply_to_mail                 = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'SMTP_REPLY_TO_EMAIL'; Default = '' }
+    default_agent_name                 = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent' ; Name = 'DEFAULT_AGENT'; Default = '' }
+    cm_type                            = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'APPLICATION_VERSION'; Default = '' }
+    cm_name                            = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'CM_APPL_TYPE'; Default = '' }
+    agent_version                       = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'CODE_VERSION'; Default = '' }
+    fd_number                          = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'FD_NUMBER'; Default = '' }
+    fix_number                         = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'FIX_NUMBER'; Default = '' }
+    agent_directory                    = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'AGENT_DIR'; Default = '' }
+}
+
+function Get-ModuleParameter {
+    <#
+    .SYNOPSIS
+    Removes defined parameter values from a passed $PSBoundParameters object
+
+    .DESCRIPTION
+    When passed a $PSBoundParameters hashtable, this function removes standard parameters
+    (like Verbose/Confirm etc) and returns the passed object with only the non-standard
+    parameters left in place.
+
+    .PARAMETER Parameters
+    This is the input object from which to remove the default set of parameters.
+    It is intended to accept the $PSBoundParameters object from another function.
+
+    .PARAMETER ParametersToRemove
+    Accepts an array of any additional parameter keys which should be removed from the passed input
+    object. Specifying additional parameter names/keys here means that the default value assigned
+    to the BaseParameters parameter will remain unchanged.
+
+    .EXAMPLE
+    $PSBoundParameters | Get-ModuleParameter
+
+    .EXAMPLE
+    Get-ModuleParameter -Parameters $PSBoundParameters -ParametersToRemove param1,param2
+
+    .INPUTS
+    $PSBoundParameters object
+
+    .OUTPUTS
+    Hashtable/$PSBoundParameters object, with defined parameters removed.
+    #>
+    [System.Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', 'FilteredParameters', Justification = "False Positive")]
+    [CmdletBinding()]
+    [OutputType('System.Collections.Hashtable')]
+    param(
+        [parameter(
+            Position = 0,
+            Mandatory = $true,
+            ValueFromPipeline = $true)]
+        [Hashtable]$Parameters,
+
+        [parameter(
+            Mandatory = $false)]
+        [array]$ParametersToRemove = @()
+
+    )
+
+    BEGIN {
+
+        $BaseParameters = [Collections.Generic.List[String]]@(
+            [System.Management.Automation.PSCmdlet]::CommonParameters +
+            [System.Management.Automation.PSCmdlet]::OptionalCommonParameters
+        )
+
+    }
+
+    PROCESS {
+
+        $Parameters.Keys | ForEach-Object {
+
+            $FilteredParameters = @{ }
+
+        } {
+
+            if (($BaseParameters + $ParametersToRemove) -notcontains $PSItem) {
+
+                $FilteredParameters.Add($PSItem, $Parameters[$PSItem])
+
+            }
+
+        } { $FilteredParameters }
+
+    }
+
+    END { }
+
+}
+Function Convert-StringToSnakeCase {
+    <#
+    .SYNOPSIS
+    This function convert a string in convert a string in camelCase format to snake_case
+    .PARAMETER String
+    Specifies the string in snake_case format.
+    #>
+    [OutputType([System.String])]
+    param (
+        [Parameter(Mandatory = $true, Position = 0)]
+        [string]
+        $string
+    )
+    # cope with pluralized abbreaviations such as TargetGroupARNs
+    if ($string -cmatch "[A-Z]{3,}s") {
+        $replacement_string = $string -creplace $matches[0], "_$($matches[0].ToLower())"
+
+        # handle when there was nothing before the plural pattern
+        if ($replacement_string.StartsWith("_") -and -not $string.StartsWith("_")) {
+            $replacement_string = $replacement_string.Substring(1)
+        }
+        $string = $replacement_string
+    }
+    $string = $string -creplace "(.)([A-Z][a-z]+)", '$1_$2'
+    $string = $string -creplace "([a-z0-9])([A-Z])", '$1_$2'
+    $string = $string.ToLower()
+
+    return $string
+}
+
+function ConvertTo-Boolean {
+    <#
+    .SYNOPSIS
+    This function Convert common values to Powershell boolean values $true and $false.
+    .PARAMETER value
+    Specifies the string to convert.
+    #>
+    param
+    (
+        [Parameter(Mandatory = $false, ValueFromPipeline = $true)]
+        [string]
+        $value
+    )
+    switch ($value) {
+        "y" { return $true; }
+        "yes" { return $true; }
+        "true" { return $true; }
+        "t" { return $true; }
+        1 { return $true; }
+        "n" { return $false; }
+        "no" { return $false; }
+        "false" { return $false; }
+        "f" { return $false; }
+        0 { return $false; }
+    }
+}
+
+Function ConvertFrom-ControlMParameter {
+
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]
+        $Name,
+        [string]
+        $Value
+    )
+    $ConvertedValue = $null
+
+    if ($Name -eq 'ssl') {
+        $ConvertedValue = ($Value -contains 'SSL=Y')
+    }
+    elseif ($Name -eq 'CommunicationTrace') {
+        $ConvertedValue = ConvertTo-Boolean -Value $Value;
+    }
+    elseif (-not $script:ParameterList[$Name]) {
+        $ConvertedValue = [string]$Value
+    }
+    else {
+        $ParameterType = $script:ParameterList[$Name].ParameterType.Name
+        $ConvertedValue = switch ($ParameterType) {
+            "Int32" {
+                [int]$int = $null
+                [int32]::TryParse($Value, [ref]$int) | Out-Null; $int; break
+            }
+            "Boolean" {
+                ConvertTo-Boolean -Value $Value; break
+            }
+            default {
+                [string]$Value
+            }
+        }
+    }
+    return $ConvertedValue
+}
+
+Function ConvertTo-ControlMParameter {
+
+    [OutputType('System.String')]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]
+        $Name,
+        [Parameter(Mandatory = $true)]
+        $Value
+    )
+
+    $NewValue = $null
+
+    if ($Name -eq 'ssl') {
+        $NewSetting = if ([bool]$Value) { 'SSL=Y' } else { 'SSL=N' }
+        $ControlMValue = Get-ControlMParameter -Name 'ssl'
+        $NewValue = if ([string]::IsNullOrEmpty($Value)) { $NewSetting } else { $ControlMValue -replace "SSL=[N|Y]", $NewSetting }
+    }
+    elseif ($Name -eq 'CommunicationTrace') {
+        $NewValue = if ([bool]$Value) { '1' } else { '0' }
+    }
+    elseif ($value -is [bool]) {
+        $NewValue = if ([bool]$Value) { 'Y' } else { 'N' }
+    }
+    elseif ($value -is [int]) {
+        $NewValue = [string]$Value
+    }
+    else {
+        $NewValue = [string]$Value
+    }
+    return $NewValue
 }
 
 Function Get-ControlMParameter {
+
+    [OutputType('System.String')]
     param (
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [string]
@@ -251,97 +315,74 @@ Function Get-ControlMParameter {
 
     $optionName = Convert-StringToSnakeCase -String $Name
     if ( -not $configuration.ContainsKey($optionName) ) {
-        Throw "The configuration hashtable does not contain the $optionName setting converted from the $Name parameter name"
+        $module.FailJson("The configuration hashtable does not contain the `"$optionName`" setting converted from the `"$Name`" parameter name")
     }
 
     $RegistryInfo = $configuration[$optionName]
     Get-ChildItem -Path Registry::$($RegistryInfo.Path) -Name $RegistryInfo.Name -ErrorAction SilentlyContinue -ErrorVariable RegistryError -OutVariable RegistryEntry
     $RegistryValue = if ($RegistryError) { $RegistryInfo.Default } else { $RegistryEntry.$($RegistryInfo.Name) }
 
-    $ParameterList = (Get-Command -Name 'Test-TargetResource').Parameters;
-    if ($Name -eq 'ssl') {
-        $Value = ($RegistryValue -contains 'SSL=Y')
-    }
-    else {
-        $ParameterType = $ParameterList[$Name].ParameterType.Name
-        $Value = switch ($ParameterType) {
-            "Int32" {
-                [int]$int = $null
-                $r = [int32]::TryParse($RegistryValue, [ref]$int); $int; break
-            }
-            "Boolean" {
-                ConvertTo-Boolean -Value $RegistryValue; break
-            }
-            default {
-                [string]$RegistryValue
-            }
-        }
-    }
-    return $Value
+    return $RegistryValue
 }
 
 Function Set-ControlMParameter {
+
+    [OutputType([System.Boolean])]
     param (
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [string]
         $Name,
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [string]
         $Value
     )
+
     $optionName = Convert-StringToSnakeCase -String $Name
     if ( -not $configuration.ContainsKey($optionName) ) {
-        Throw "The configuration hashtable does not contain the $optionName setting converted from the $Name parameter name"
+        $module.FailJson("The configuration hashtable does not contain the `"$optionName`" setting converted from the `"$Name`" parameter name")
     }
+    $Changed = $false
 
-    $RegistryInfo = $configuration[$optionName]
-
-    if ($optionName -eq 'ssl') {
-        Get-ChildItem -Path Registry::$($RegistryInfo.Path) -Name $RegistryInfo.Name -ErrorAction SilentlyContinue -ErrorVariable RegistryError -OutVariable RegistryEntry
-        $RegistryValue = if ($RegistryError) { $RegistryInfo.Default } else { $RegistryEntry.$($RegistryInfo.Name) }
-        $NewSetting = if ([bool]$Value) { 'SSL=Y' } else { 'SSL=N' }
-        $NewValue = if ([string]::IsNullOrEmpty($Value)) { $NewSetting } else { $RegistryValue -replace "SSL=[N|Y]", $NewSetting }
+    $CurrentValue = Get-ControlMParameter -Name $Name
+    if ($CurrentValue -ne $Value) {
+        $Changed = $true
+        if (-not $module.CheckMode) {
+            $RegistryInfo = $configuration[$optionName]
+            Set-ItemProperty -Path Registry::$($RegistryInfo.Path) -Name $RegistryInfo.Name -Value $NewValue -ErrorAction SilentlyContinue -ErrorVariable RegistryError
+            if ($RegistryError) {
+                $module.FailJson("An error occurs when saving the `"$optionName`" setting in the registry: $RegistryError")
+            }
+        }
     }
-    elseif ($optionName -eq 'communication_trace') {
-        $NewSetting = if ([bool]$Value) { '1' } else { '0' }
-    }
-    elseif ($value -is [bool]) {
-        $NewSetting = if ([bool]$Value) { 'Y' } else { 'N' }
-    }
-    elseif ($value -is [int]) {
-        $NewSetting = [string]$NewValue
-    }
-    else {
-        $NewSetting = [string]$NewValue
-    }
-
-    if (-not $module.CheckMode) {
-        Set-ItemProperty -Path Registry::$($RegistryInfo.Path) -Name $RegistryInfo.Name -Value $NewValue -ErrorAction SilentlyContinue -ErrorVariable RegistryError
-    }
-    return ($null -ne $RegistryError)
+    return $Changed
 }
 
 Function Get-TargetResource {
+	<#
+.SYNOPSIS
+Retrieves all settings of the configuration.
+.PARAMETER Parameters
+This is the input object from the name of parameters to retrieve.
+.PARAMETER ParametersAdd
+Accepts an array of any additional parameter keys which should be add
+object.
+#>
     [OutputType('System.Collections.Hashtable')]
+    param (
+		[parameter(Position = 0, ValueFromPipeline = $true)]
+		[array]$Parameters = @($script:ParameterList.Keys),
+        [array]
+        $ParametersToAdd = @()
+    )
 
     $TargetResource = @{ }
 
-    $ParameterList = (Get-Command -Name 'Test-TargetResource').Parameters
-
-    $BaseParameters = [Collections.Generic.List[String]]@(
-        [System.Management.Automation.PSCmdlet]::CommonParameters +
-        [System.Management.Automation.PSCmdlet]::OptionalCommonParameters
-    )
-
-    foreach ($Parameter in $ParameterList) {
-
-        $ParameterNames = $Parameter.Values.Name
-        foreach ($ParameterName in $ParameterNames) {
-            if ($BaseParameters -contains $ParameterName) {
-                continue
-            }
-            $Value = Get-ControlMParameter -Name $ParameterName
-            $targetResource[$ParameterName] = $Value
-        }
+    $Parameters + $ParametersToAdd | ForEach-Object {
+        $ControlMValue = Get-ControlMParameter -Name $_
+        $Value = ConvertFrom-ControlMParameter -Name $_ -Value $ControlMValue
+        $targetResource[$_] = $Value
     }
+
     return $targetResource
 }
 
@@ -385,7 +426,7 @@ Function Test-TargetResource {
         $SSL,
         [ValidateRange(1, 12)]
         [int]
-        $ProtocolVersion,
+        $ServerAgentProtocolVersion,
         [bool]
         $AutoeditInline,
         [string]
@@ -420,7 +461,7 @@ Function Test-TargetResource {
         $AddJobStatisticsToSysout,
         [ValidateSet("MEMNAME", "JOBNAME")]
         [string]
-        $SysoutName,
+        $JobOutputName,
         [validateRange(1, 4)]
         [int]
         $WrapParametersWithDoubleQuotes,
@@ -449,28 +490,20 @@ Function Test-TargetResource {
     $isCompliant = $true;
 
     $resources = Get-TargetResource
-    if (-not ($resources -is [hashtable])) {
-        $resources = @($resources)
-    }
 
     if ($resources.Length -eq 0) {
         return $false
     }
-    $options = $PSBoundParameters | Get-ModuleParameter
+    $Parameters = $PSBoundParameters | Get-ModuleParameter
 
-    foreach ($option in $options.GetEnumerator()) {
-        $optionName = $option.Key
-        if ($resources.ContainsKey($optionName)) {
-            if ($resources[$optionName] -ne $option.Value) {
-                $isCompliant = $false
-                break
-            }
-        }
-    }
+    $difference = $Parameters.Keys | ForEach-Object { if ($resources.ContainsKey($_)) { if ($resources[$_] -ne $Parameters[$_] ) { $_ } } }
+    $isCompliant = ($null -eq $difference)
     return $isCompliant
 }
 
 function Set-TargetResource {
+
+    [OutputType([System.Boolean])]
     param (
         [ValidateRange(1024, 65535)]
         [int]
@@ -508,7 +541,7 @@ function Set-TargetResource {
         $SSL,
         [ValidateRange(1, 12)]
         [int]
-        $ProtocolVersion,
+        $ServerAgentProtocolVersion,
         [bool]
         $AutoeditInline,
         [string]
@@ -543,7 +576,7 @@ function Set-TargetResource {
         $AddJobStatisticsToSysout,
         [ValidateSet("MEMNAME", "JOBNAME")]
         [string]
-        $SysoutName,
+        $JobOutputName,
         [validateRange(1, 4)]
         [int]
         $WrapParametersWithDoubleQuotes,
@@ -570,39 +603,26 @@ function Set-TargetResource {
         $SmtpReplyToMail
     )
 
-    $changed = $false
-
-    $options = $PSBoundParameters | Get-ModuleParameter
-
-    $isCompliant = Test-TargetResource @options
-    if ($isCompliant) {
-        return $changed
-    }
+    $module.Result.changed = $false
+    $Parameters = $PSBoundParameters | Get-ModuleParameter
     $resources = Get-TargetResource
 
-    if (-not ($resources -is [hashtable])) {
-        $resources = @($resources)
-    }
+    $Parameters.Keys | ForEach-Object { if ($resources.ContainsKey($_)) {
+            if ($resources[$_] -ne $Parameters[$_] ) {
 
-    foreach ($option in $options.GetEnumerator()) {
-        $ParameterName = $option.Key
+                $ControlMValue = ConvertTo-ControlMParameter -Name $_ -Value $Parameters[$_]
 
-        if ($resources.ContainsKey($ParameterName)) {
-
-            if ($resources[$ParameterName] -ne $option.Value) {
-
-                $optionName = Convert-StringToSnakeCase -String $ParameterName
-
-                if (Set-ControlMParameter -Name $ParameterName -Value $option.Value) {
-                    $module.Diff.before.$optionName = $resources[$ParameterName]
-                    $module.Diff.after.$optionName = $option.Value
+                if (Set-ControlMParameter -Name $_ -Value $ControlMValue) {
+                    $optionName = Convert-StringToSnakeCase -String $_
+                    $module.Diff.before.$optionName = $resources[$_]
+                    $module.Diff.after.$optionName = $Parameters[$_]
                     $module.Result.changed = $true
                 }
-                if ($ParameterName -eq 'PrimaryControlmServerHost') {
-                    if (-not $resources['AuthorizedControlmServerHosts'] -and -not $options['AuthorizedControlmServerHosts']) {
-                        if (Set-ControlMParameter -Name 'AuthorizedControlmServerHosts' -Value $option.Value) {
+                if ($_ -eq 'PrimaryControlmServerHost') {
+                    if (-not $resources['AuthorizedControlmServerHosts'] -and -not $Parameters['AuthorizedControlmServerHosts']) {
+                        if (Set-ControlMParameter -Name 'AuthorizedControlmServerHosts' -Value $ControlMValue) {
                             $module.Diff.before.primary_controlm_server_host = ''
-                            $module.Diff.after.primary_controlm_server_host = $option.Value
+                            $module.Diff.after.primary_controlm_server_host = $Parameters[$_]
                             $module.Result.changed = $true
                         }
                     }
@@ -610,6 +630,7 @@ function Set-TargetResource {
             }
         }
     }
+    return $module.Result.changed
 }
 
 $BaseParameters = [Collections.Generic.List[String]]@(
@@ -617,7 +638,12 @@ $BaseParameters = [Collections.Generic.List[String]]@(
     [System.Management.Automation.PSCmdlet]::OptionalCommonParameters
 )
 
-$ParameterList = (Get-Command -Name 'Test-TargetResource').Parameters;
+$script:ParameterList = (Get-Command -Name 'Test-TargetResource').Parameters
+@($script:ParameterList.Keys) | ForEach-Object {
+    if ($_ -in $BaseParameters) {
+        $script:ParameterList.Remove($_) | Out-Null
+    }
+}
 
 $module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
 $module.Diff.before = @{ }
@@ -625,21 +651,19 @@ $module.Diff.after = @{ }
 
 $params = @{ }
 
-foreach ($Parameter in $ParameterList) {
-
-    $ParameterNames = $Parameter.Values.Name
-    foreach ($ParameterName in $ParameterNames) {
-        if ($BaseParameters -contains $ParameterName) {
-            continue
-        }
-        $optionName = Convert-StringToSnakeCase -String $ParameterName
-        if ($module.Params.$optionName) {
-            $params.$ParameterName = $module.Params.$optionName
-        }
+$ParameterList.Keys | ForEach-Object {
+    $optionName = Convert-StringToSnakeCase -String $_
+    if ($module.Params.$optionName) {
+        $params.$($_) = $module.Params.$optionName
     }
 }
 
-Set-TargetResource @params
+if (!(Test-TargetResource @params)) {
+    Set-TargetResource @params | Out-Null
+}
+
+$resources = Get-TargetResource -ParametersToAdd @('default_agent_name','cm_type','cm_name','agent_version','fd_number','fix_number','agent_directory')
+$module.result.Config = @{ }
+$resources.Keys | Foreach-Object { $module.result.Config.Add($(Convert-StringToSnakeCase -String $_), $resources[$_]) }
 
 $module.ExitJson()
-

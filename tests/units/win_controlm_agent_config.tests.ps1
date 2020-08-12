@@ -23,8 +23,7 @@ function Get-AnsibleCSharpUtils {
     }
 }
 
-function Import-AnsibleCSharpUtils
-{
+function Import-AnsibleCSharpUtils {
     param (
         [parameter(ValueFromPipeline)]
         [string[]]$name
@@ -87,7 +86,6 @@ function Import-AnsibleModuleUtils {
         }
     }
 }
-
 function Invoke-TestSetup {
     $ModuleUtils = Get-AnsibleCSharpUtils -Path $ansibleModulePath
     if ($ModuleUtils) {
@@ -99,11 +97,10 @@ function Invoke-TestSetup {
         $ModuleUtils | Import-AnsibleModuleUtils
     }
 }
-
 function Invoke-TestCleanup {
     $ModuleUtils = Get-AnsibleModuleUtils -Path $ansibleModulePath
     if ($ModuleUtils) {
-    $ModuleUtils | Remove-Module
+        $ModuleUtils | Remove-Module
     }
 }
 
@@ -123,15 +120,33 @@ Function Invoke-AnsibleModule {
     }
     Process {
         . $ansibleModulePath
+        return $module.result
     }
 }
 
 try {
-    $params = @{
-        agent_to_server_port = 7006
-        primary_controlm_server_host = 'test'
+    Describe 'win_controlm_agent_config' -Tag 'Set' {
+
+        Context 'Control/M Agent is installed' {
+            Mock -CommandName Get-ItemProperty  -MockWith { }
+            Mock -CommandName Set-ItemProperty  -MockWith { }
+
+            $params = @{
+                agent_to_server_port         = 7007
+                server_to_agent_port         = 7008
+                primary_controlm_server_host = 'server1'
+                authorized_controlm_server_hosts = 'server1|server2|server3.cloud'
+                tracker_event_port = 8000
+                job_children_inside_job_object = $false
+                job_output_name = 'JOBNAME'
+            }
+
+            It 'Should return params' {
+                $result = Invoke-AnsibleModule -params $params
+                $result.changed | Should -Be $true
+            }
+        }
     }
-    Invoke-AnsibleModule -params $params
 }
 finally {
     Invoke-TestCleanup
