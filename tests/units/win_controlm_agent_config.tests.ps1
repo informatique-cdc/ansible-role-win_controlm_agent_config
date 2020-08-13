@@ -130,20 +130,23 @@ try {
         Context 'Control/M Agent is installed' {
             Mock -CommandName Get-ItemProperty  -MockWith { }
             Mock -CommandName Set-ItemProperty  -MockWith { }
+            Mock -CommandName Get-Service -MockWith { }
+            Mock -CommandName Get-NetFirewallRule -MockWith { }
+            Mock -CommandName Set-NetFirewallRule -MockWith { }
 
             $params = @{
-                agent_to_server_port         = 7007
-                server_to_agent_port         = 7008
-                primary_controlm_server_host = 'server1'
+                agent_to_server_port             = 7007
+                server_to_agent_port             = 7008
+                primary_controlm_server_host     = 'server1'
                 authorized_controlm_server_hosts = 'server1|server2|server3.cloud'
-                tracker_event_port = 8000
-                job_children_inside_job_object = $false
-                job_output_name = 'JOBNAME'
+                tracker_event_port               = 8000
+                job_children_inside_job_object   = $false
+                job_output_name                  = 'JOBNAME'
             }
 
             It 'Should return params' {
                 $result = Invoke-AnsibleModule -params $params
-                $result.changed | Should -Be $true
+                $result.changed | Should Be $true
             }
         }
     }

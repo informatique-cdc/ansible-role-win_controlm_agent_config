@@ -19,7 +19,7 @@ $spec = @{
         allow_comm_init                    = @{ type = "bool" }
         foreign_language_support           = @{ type = "str"; choices = @('LATIN-1', 'CJK') }
         ssl                                = @{ type = "bool" }
-        server_agent_protocol_version                   = @{ type = "int" }
+        server_agent_protocol_version      = @{ type = "int" }
         autoedit_inline                    = @{ type = "bool" }
         listen_to_network_interface        = @{ type = "str" }
         ctms_address_mode                  = @{ type = "str"; choices = @('', 'IP') }
@@ -33,7 +33,7 @@ $spec = @{
         logon_domain                       = @{ type = "str" }
         job_children_inside_job_object     = @{ type = "bool" }
         job_statistics_to_sysout           = @{ type = "bool" }
-        job_output_name                        = @{ type = "str"; choices = @('MEMNAME', 'JOBNAME') }
+        job_output_name                    = @{ type = "str"; choices = @('MEMNAME', 'JOBNAME') }
         wrap_parameters_with_double_quotes = @{ type = "int"; choices = @(1, 2, 3, 4) }
         run_user_logon_script              = @{ type = "bool" }
         cjk_encoding                       = @{ type = "str"; choices = @('', 'UTF-8', 'JAPANESE EUC', 'JAPANESE SHIFT-JIS', 'KOREAN EUC', 'SIMPLIFIED CHINESE GBK', 'SIMPLIFIED CHINESE GB', 'TRADITIONAL CHINESE EUC', 'TRADITIONAL CHINESE BIG') } # (CJK Encoding) Determines the CJK encoding used by Control-M/Agent to run jobs.
@@ -65,7 +65,7 @@ $configuration = @{
     allow_comm_init                    = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'ALLOW_COMM_INIT'; Default = 'Y' }
     foreign_language_support           = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'I18N'; Default = 'LATIN-1' }
     ssl                                = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'COMMOPT'; Default = 'SSL=N' }
-    server_agent_protocol_version                   = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'PROTOCOL_VERSION'; Default = '12' }
+    server_agent_protocol_version      = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'PROTOCOL_VERSION'; Default = '12' }
     autoedit_inline                    = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'USE_JOB_VARIABLES'; Default = 'Y' }
     listen_to_network_interface        = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'LISTEN_INTERFACE'; Default = '*ANY' }
     ctms_address_mode                  = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'CTMS_ADDR_MODE'; Default = '' }
@@ -79,7 +79,7 @@ $configuration = @{
     logon_domain                       = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'DOMAIN'; Default = '' }
     job_children_inside_job_object     = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'JOB_WAIT'; Default = 'Y' }
     add_job_statistics_to_sysout       = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'JOB_STATISTIC'; Default = 'Y' }
-    job_output_name                        = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'OUTPUT_NAME'; Default = 'MEMNAME' }
+    job_output_name                    = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'OUTPUT_NAME'; Default = 'MEMNAME' }
     wrap_parameters_with_double_quotes = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'WRAP_PARAM_QUOTES'; Default = '4' }
     run_user_logon_script              = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'RUN_USER_LOGON_SCRIPT'; Default = 'N' }
     cjk_encoding                       = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'APPLICATION_LOCALE'; Default = '' }
@@ -93,7 +93,7 @@ $configuration = @{
     default_agent_name                 = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent' ; Name = 'DEFAULT_AGENT'; Default = '' }
     cm_type                            = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'APPLICATION_VERSION'; Default = '' }
     cm_name                            = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'CM_APPL_TYPE'; Default = '' }
-    agent_version                       = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'CODE_VERSION'; Default = '' }
+    agent_version                      = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'CODE_VERSION'; Default = '' }
     fd_number                          = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'FD_NUMBER'; Default = '' }
     fix_number                         = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'FIX_NUMBER'; Default = '' }
     agent_directory                    = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'AGENT_DIR'; Default = '' }
@@ -358,19 +358,19 @@ Function Set-ControlMParameter {
 }
 
 Function Get-TargetResource {
-	<#
-.SYNOPSIS
-Retrieves all settings of the configuration.
-.PARAMETER Parameters
-This is the input object from the name of parameters to retrieve.
-.PARAMETER ParametersAdd
-Accepts an array of any additional parameter keys which should be add
-object.
-#>
+    <#
+    .SYNOPSIS
+    Retrieves all settings of the configuration.
+    .PARAMETER Parameters
+    This is the input object from the name of parameters to retrieve.
+    .PARAMETER ParametersAdd
+    Accepts an array of any additional parameter keys which should be add
+    object.
+    #>
     [OutputType('System.Collections.Hashtable')]
     param (
-		[parameter(Position = 0, ValueFromPipeline = $true)]
-		[array]$Parameters = @($script:ParameterList.Keys),
+        [parameter(Position = 0, ValueFromPipeline = $true)]
+        [array]$Parameters = @($script:ParameterList.Keys),
         [array]
         $ParametersToAdd = @()
     )
@@ -630,8 +630,31 @@ function Set-TargetResource {
             }
         }
     }
+
+    if (-not $module.CheckMode) {
+        @('AgentToServerPort', 'ServerToAgentPort', 'TrackerEventPort') | ForEach-Object {
+            $Name = $_
+            if ($Parameters[$Name]) {
+                Get-NetFirewallRule | Where-Object { $_.LocalPort -eq $resources[$Name] } | Set-NetFirewallRule -LocalPort $Parameters[$Name] -ErrorAction SilentlyContinue -ErrorVariable ProcessError
+                if ($ProcessError) {
+                    $module.FailJson("An error occurs when changing the firewall rule with the $($resources[$Name]) local port to $($Parameters[$Name]) : $ProcessError")
+                }
+            }
+        }
+    }
+
     return $module.Result.changed
 }
+
+$module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
+
+Get-Service -Name ctmag -ErrorAction SilentlyContinue -ErrorVariable ProcessError -OutVariable Service
+If ($ProcessError) {
+    $module.FailJson("The Control/M Agent Windows service is not installed. $ProcessError")
+}
+
+$module.Diff.before = @{ }
+$module.Diff.after = @{ }
 
 $BaseParameters = [Collections.Generic.List[String]]@(
     [System.Management.Automation.PSCmdlet]::CommonParameters +
@@ -645,12 +668,7 @@ $script:ParameterList = (Get-Command -Name 'Test-TargetResource').Parameters
     }
 }
 
-$module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
-$module.Diff.before = @{ }
-$module.Diff.after = @{ }
-
 $params = @{ }
-
 $ParameterList.Keys | ForEach-Object {
     $optionName = Convert-StringToSnakeCase -String $_
     if ($module.Params.$optionName) {
@@ -662,7 +680,7 @@ if (!(Test-TargetResource @params)) {
     Set-TargetResource @params | Out-Null
 }
 
-$resources = Get-TargetResource -ParametersToAdd @('default_agent_name','cm_type','cm_name','agent_version','fd_number','fix_number','agent_directory')
+$resources = Get-TargetResource -ParametersToAdd @('default_agent_name', 'cm_type', 'cm_name', 'agent_version', 'fd_number', 'fix_number', 'agent_directory')
 $module.result.Config = @{ }
 $resources.Keys | Foreach-Object { $module.result.Config.Add($(Convert-StringToSnakeCase -String $_), $resources[$_]) }
 

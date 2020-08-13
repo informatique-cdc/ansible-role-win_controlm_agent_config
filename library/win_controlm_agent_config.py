@@ -308,6 +308,7 @@ config:
             description: The port number in the Control-M/Agent computer where data is received from the Control-M/Server computer.
             returned: success
             type: int
+            sample: 7006
         allow_comm_init:
             description: Indicates whether the agent can open a connection to the server when working in persistent connection mode.
             returned: success
@@ -324,6 +325,7 @@ config:
             description: The CJK encoding used by Control-M/Agent to run jobs.
             returned: success
             type: str
+            sample: UTF-8
         communication_trace:
             description: Indicates whether communication packets that Control-M/Agent sends to and receives from Control-M/Server are written to a file.
             returned: success
@@ -339,7 +341,8 @@ config:
         days_to_retain_log_files:
             description: Number of days to retain agent proclog files.
             returned: success
-            type: ints
+            type: int
+            sample: 1
         default_printer:
             description: The default printer for job OUTPUT files.
             returned: success
@@ -348,6 +351,7 @@ config:
             description: The debug level.
             returned: success
             type: int
+            sample: 0
         echo_job_commands_into_sysout:
             description: Indicates whether to print commands in the OUTPUT of a job.
             returned: success
@@ -356,6 +360,7 @@ config:
             description: Indicates whether the system is configured for CJK languages or Latin1 languages.
             returned: success
             type: str
+            sample: LATIN-1
         job_children_inside_job_object:
             description: Indicates whether procedures invoked by a job can be run outside the Job Object.
             returned: success
@@ -364,14 +369,17 @@ config:
             description: The maximum size (MB) of diagnostic log files for a process or a thread.
             returned: success
             type: int
+            sample: 10
         limit_log_version:
             description: The number of generations of diagnostic log information to keep for a process or a thread.
             returned: success
             type: int
+            sample: 10
         listen_to_network_interface:
             description: The network interface the agent is listening on.
             returned: success
             type: str
+            sample: *ANY
         logical_agent_name:
             description: The logical name of the agent.
             returned: success
@@ -388,6 +396,7 @@ config:
             description: The number of days to retain the files in the dailylog directory.
             returned: success
             type: int
+            sample: 7
         persistent_connection:
             description: Indicates whether NS process creates a persistent connection with the agent and manages the session with this agent.
             returned: success
@@ -400,6 +409,7 @@ config:
             description: The server-Agent communication protocol version.
             returned: success
             type: int
+            sample: 12
         run_user_logon_script:
             description: Indicates wether a user-defined logon script should be run by the Control-M/Agent before running the standard user logon script.
             returned: success
@@ -408,10 +418,12 @@ config:
             description: The port number that receives data from the Control-M/Agent computer.
             returned: success
             type: int
+            sample: 7005
         smtp_port:
             description: The port number on which the SMTP server communicates.
             returned: success
             type: int
+            sample: 25
         smtp_reply_to_mail:
             description: The e-mail address to which to send replies.
             returned: success
@@ -424,6 +436,7 @@ config:
             description: The e-mail address of the sender.
             returned: success
             type: str
+            sample: control@m
         smtp_server_relay_name:
             description: The name of the SMTP server.
             returned: success
@@ -436,26 +449,32 @@ config:
             description: The prefix for the OUTPUT file name.
             returned: success
             type: str
+            sample: JOBNAME
         tcpip_timeout:
             description: The communication job-tracking timeout in seconds.
             returned: success
             type: int
+            sample: 60
         timeout_for_agent_utilities:
             description: The maximum time (in seconds) the agent waits after sending a request to Control-M/Server.
             returned: success
             type: int
+            sample: 600
         tracker_event_port:
             description: The number of the port for sending messages to the Tracker process when jobs end.
             returned: success
             type: int
+            sample: 7035
         tracker_polling_interval:
             description: The tracker event timeout in seconds.
             returned: success
             type: int
+            sample: 60
         wrap_parameters_with_double_quotes:
             description: Indicates how parameter values (%%PARMn....%%PARMx) are managed by Control-M/Agent for Microsoft Windows.
             returned: success
             type: int
+            sample: 4
         default_agent_name:
             description: The agent name.
             returned: success
@@ -475,16 +494,20 @@ config:
             description:
             returned: success
             type: str
+            sample: 9.0.19.200
         fd_number:
             description: The unique identifier of the agent.
             returned: success
             type: str
+            sample: DRKAI.9.0.20.000
         fix_number: The unique identifier of the fix pack.
             description:
             returned: success
             type: str
+            sample: DRKAI.9.0.20.000
         agent_directory:
             description: The installation folder of the agent.
             returned: success
             type: str
+            sample: C:\Program Files\Control-M Agent\Default\
 '''
