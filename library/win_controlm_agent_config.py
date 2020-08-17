@@ -22,10 +22,9 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-ANSIBLE_METADATA = {'metadata_version': '1.0',
+ANSIBLE_METADATA = {'metadata_version': '1.1',
                     'status': ['preview'],
-                    'supported_by': 'communoty'}
-
+                    'supported_by': 'community'}
 
 DOCUMENTATION = r'''
 ---
@@ -47,7 +46,7 @@ options:
     server_to_agent_port:
         description:
             - Defines the port number between 1024 and 65535 that receives data from the Control-M/Agent computer.
-            - This value must match the Agent-to-Server Port Number in Control-M/Server. The value is the c(COMTIMOUT) communication job-tracking timeout in seconds.
+            - This value must match the Agent-to-Server Port Number in Control-M/Server. The value is the I(COMTIMOUT) communication job-tracking timeout in seconds.
         default: 7006
         type: int
     primary_controlm_server_host:
@@ -98,14 +97,14 @@ options:
         type: str
     persistent_connection:
         description:
-            - Indicates the persistent connection setting. Set the c(persistent_connection) parameter to connect to a specific agent with either a persistent or transient connection.
-            - When c(persistent_connection) is set to c(Yes), the NS process creates a persistent connection with the agent and manages the session with this agent. If the connection is broken with an agent or NS is unable to connect with an agent, the agent is marked as Unavailable. When the connection with the agent is resumed, the NS recreates a persistent connection with the agent and marks the agent as Available.
+            - Indicates the persistent connection setting. Set the I(persistent_connection) parameter to connect to a specific agent with either a persistent or transient connection.
+            - When I(persistent_connection) is set to c(Yes), the NS process creates a persistent connection with the agent and manages the session with this agent. If the connection is broken with an agent or NS is unable to connect with an agent, the agent is marked as Unavailable. When the connection with the agent is resumed, the NS recreates a persistent connection with the agent and marks the agent as Available.
         type: bool
         default: No
     allow_comm_init:
         description:
             - Determines if the agent can open a connection to the server when working in persistent connection mode.
-            - When c(allow_comm_init) is set to c(Y), the Control-M/Agent to initiate the communication with the Control-M/Server.
+            - When I(allow_comm_init) is set to c(Y), the Control-M/Agent to initiate the communication with the Control-M/Server.
         default: Yes
         type: bool
     foreign_language_support:
@@ -139,7 +138,7 @@ options:
         type: str
     ctms_address_mode:
         description:
-            - If this parameter is set to c(IP), the IP address instead of the host name is saved in c(ctms_hostmane).
+            - If this parameter is set to c(IP), the IP address instead of the host name is saved in I(ctms_hostmane).
             - Use this parameter when Control-M runs on a computer with more than one network card.
         type: str
         default: ""
@@ -151,7 +150,7 @@ options:
     tcpip_timeout:
         description:
             - The communication job-tracking timeout in seconds.
-            - When the value of ‘TCP/IP timeout’ is changed, using the configuration utility or CCM, the timeout part of the c(server_to_agent_port) and c(agent_to_server_port) parameters are changed.
+            - When the value of ‘TCP/IP timeout’ is changed, using the configuration utility or CCM, the timeout part of the I(server_to_agent_port) and I(agent_to_server_port) parameters are changed.
             - Valid values: 0-999999
         default: 60
         type: int
