@@ -1,6 +1,20 @@
 # Set $ErrorActionPreference to what's set during Ansible execution
 $ErrorActionPreference = "Stop"
 
+# Update Pester if needed
+try {
+    $PesterVersion = [version](get-InstalledModule -Name Pester -ErrorAction SilentlyContinue).Version
+    $DoPesterUpdate = ($PesterVersion.Major -le 3)
+}
+catch {
+    $DoPesterUpdate = $true
+}
+finally {
+    if ($DoPesterUpdate) {
+        Install-Module -Name Pester -Force -SkipPublisherCheck 
+    }
+}
+
 #Get Current Directory
 $Here = Split-Path -Parent $MyInvocation.MyCommand.Path
 
@@ -128,25 +142,107 @@ try {
     Describe 'win_controlm_agent_config' -Tag 'Set' {
 
         Context 'Control/M Agent is installed' {
-            Mock -CommandName Get-ItemProperty  -MockWith { }
+
             Mock -CommandName Set-ItemProperty  -MockWith { }
             Mock -CommandName Get-Service -MockWith { }
-            Mock -CommandName Get-NetFirewallRule -MockWith { }
-            Mock -CommandName Set-NetFirewallRule -MockWith { }
+            Mock -CommandName Restart-Service -MockWith { }
+            Mock -CommandName Get-NetFirewallPortFilter -MockWith { }
+            Mock -CommandName Set-NetFirewallPortFiltere -MockWith { }
 
-            $params = @{
-                agent_to_server_port             = 7007
-                server_to_agent_port             = 7008
-                primary_controlm_server_host     = 'server1'
-                authorized_controlm_server_hosts = 'server1|server2|server3.cloud'
-                tracker_event_port               = 8000
-                job_children_inside_job_object   = $false
-                job_output_name                  = 'JOBNAME'
+            It 'Should change port numbers' {
+
+                Mock -CommandName Get-ItemProperty -MockWith {
+                    return @{
+                        ATCMNDATA          = '9000'
+                        AGCMNDATA          = '9001'
+                        TRACKER_EVENT_PORT = '9002'
+                    }
+                }
+
+                $params = @{
+                    agent_to_server_port = 8000
+                    server_to_agent_port = 8001
+                    tracker_event_port   = 8002
+                }
+
+                $result = Invoke-AnsibleModule -params $params
+                $result.changed | Should -Be $true
             }
 
-            It 'Should return params' {
+            It 'Should change controlm server hosts' {
+
+                Mock -CommandName Get-ItemProperty -MockWith {
+                    return @{
+                        CTMSHOST     = 'server2'
+                        CTMPERMHOSTS = 'server2'
+                    }
+                }
+
+                $params = @{
+                    primary_controlm_server_host     = 'server1'
+                    authorized_controlm_server_hosts = 'server1|server2|server3.cloud'
+                }
                 $result = Invoke-AnsibleModule -params $params
-                $result.changed | Should Be $true
+                $result.changed | Should -Be $true
+            }
+
+            It 'Should change job name' {
+
+                Mock -CommandName Get-ItemProperty -MockWith {
+                    return @{
+                        OUTPUT_NAME = 'JOBNAME'
+                    }
+                }
+
+                $params = @{
+                    job_output_name = 'MEMNAME'
+                }
+                $result = Invoke-AnsibleModule -params $params
+                $result.changed | Should -Be $true
+            }
+
+            It 'Should change communication trace' {
+
+                Mock -CommandName Get-ItemProperty -MockWith {
+                    return @{
+                        COMM_TRACE = '1'
+                    }
+                }
+                $params = @{
+                    communication_trace = $false
+                }
+                $result = Invoke-AnsibleModule -params $params
+                $result.changed | Should -Be $true
+            }
+
+            It 'Should change job children inside job_ bject' {
+
+                Mock -CommandName Get-ItemProperty -MockWith {
+                    return @{
+                        JOB_WAIT = 'Y'
+                    }
+                }
+                $params = @{
+                    job_children_inside_job_object = $false
+                }
+                $result = Invoke-AnsibleModule -params $params
+                $result.changed | Should -Be $true
+            }
+        
+            It 'Should change ssl' {
+
+                Mock -CommandName Get-ItemProperty -MockWith {
+                    return @{
+                        COMMOPT = 'SSL=N;DUMMY=N'
+                    }
+                }
+                $params = @{
+                    ssl = $true
+                }
+                $result = Invoke-AnsibleModule -params $params
+                $result.changed | Should -Be $true
+                $result.diff.before.ssl | Should -Be $false
+                $result.diff.after.ssl | Should -Be $true
             }
         }
     }

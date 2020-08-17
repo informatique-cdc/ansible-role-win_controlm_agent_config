@@ -50,53 +50,53 @@ $spec = @{
 
 # All entries to REG_SZ type
 $configuration = @{
-    agent_to_server_port               = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'ATCMNDATA' ; Default = '7005' }
-    server_to_agent_port               = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'AGCMNDATA' ; Default = '7006' }
-    primary_controlm_server_host       = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'CTMSHOST' ; Default = '' }
-    authorized_controlm_server_hosts   = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'CTMPERMHOSTS' ; Default = '' }
-    diagnostic_level                   = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'DBGLVL'; Default = '0' }
-    communication_trace                = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'COMM_TRACE'; Default = '0' }
-    days_to_retain_log_files           = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'LOGKEEPDAYS'; Default = '1' }
-    daily_log_file_enabled             = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'AG_LOG_ON'; Default = 'Y' }
-    tracker_event_port                 = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'TRACKER_EVENT_PORT'; Default = '7035' }
-    logical_agent_name                 = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'LOGICAL_AGENT_NAME' ; Default = "$env:COMPUTERNAME" }
-    java_new_ar                        = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'JAVA_AR' ; Default = 'N' }
-    persistent_connection              = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'PERSISTENT_CONNECTION'; Default = 'N' }
-    allow_comm_init                    = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'ALLOW_COMM_INIT'; Default = 'Y' }
-    foreign_language_support           = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'I18N'; Default = 'LATIN-1' }
-    ssl                                = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'COMMOPT'; Default = 'SSL=N' }
-    server_agent_protocol_version      = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'PROTOCOL_VERSION'; Default = '12' }
-    autoedit_inline                    = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'USE_JOB_VARIABLES'; Default = 'Y' }
-    listen_to_network_interface        = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'LISTEN_INTERFACE'; Default = '*ANY' }
-    ctms_address_mode                  = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'CTMS_ADDR_MODE'; Default = '' }
-    timeout_for_agent_utilities        = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'UTTIMEOUT'; Default = '600' }
-    tcpip_timeout                      = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'TCP_IP_TIMEOUT'; Default = '60' }
-    tracker_polling_interval           = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'EVENT_TIMEOUT' ; Default = '60' }
-    limit_log_file_size                = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'LIMIT_LOG_FILE_SIZE'; Default = '10' }
-    limit_log_version                  = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'LIMIT_LOG_VERSIONS'; Default = '10' }
-    measure_usage_day                  = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'MEASURE_USAGE_DAYS'; Default = '7' }
-    logon_as_user                      = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'LOGON_AS_USER'; Default = 'N' }
-    logon_domain                       = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'DOMAIN'; Default = '' }
-    job_children_inside_job_object     = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'JOB_WAIT'; Default = 'Y' }
-    add_job_statistics_to_sysout       = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'JOB_STATISTIC'; Default = 'Y' }
-    job_output_name                    = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'OUTPUT_NAME'; Default = 'MEMNAME' }
-    wrap_parameters_with_double_quotes = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'WRAP_PARAM_QUOTES'; Default = '4' }
-    run_user_logon_script              = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'RUN_USER_LOGON_SCRIPT'; Default = 'N' }
-    cjk_encoding                       = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'APPLICATION_LOCALE'; Default = '' }
-    default_printer                    = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'DFTPRT'; Default = '' }
-    echo_job_commands_into_sysout      = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'ECHO_OUTPUT'; Default = 'Y' }
-    smtp_server_relay_name             = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'SMTP_SERVER_NAME'; Default = '' }
-    smtp_port                          = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'SMTP_PORT_NUMBER'; Default = '25' }
-    smtp_sender_mail                   = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'SMTP_SENDER_EMAIL'; Default = 'control@m' }
-    smtp_sender_friendly_name          = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'SMTP_SENDER_FRIENDLY_NAME'; Default = '' }
-    smtp_reply_to_mail                 = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'SMTP_REPLY_TO_EMAIL'; Default = '' }
-    default_agent_name                 = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent' ; Name = 'DEFAULT_AGENT'; Default = '' }
-    cm_type                            = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'APPLICATION_VERSION'; Default = '' }
-    cm_name                            = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'CM_APPL_TYPE'; Default = '' }
-    agent_version                      = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'CODE_VERSION'; Default = '' }
-    fd_number                          = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'FD_NUMBER'; Default = '' }
-    fix_number                         = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'FIX_NUMBER'; Default = '' }
-    agent_directory                    = @{ Path = 'HKEY_LOCAL_MACHINE\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'AGENT_DIR'; Default = '' }
+    agent_to_server_port               = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'ATCMNDATA' ; Default = '7005' }
+    server_to_agent_port               = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'AGCMNDATA' ; Default = '7006' }
+    primary_controlm_server_host       = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'CTMSHOST' ; Default = '' }
+    authorized_controlm_server_hosts   = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'CTMPERMHOSTS' ; Default = '' }
+    diagnostic_level                   = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'DBGLVL'; Default = '0' }
+    communication_trace                = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'COMM_TRACE'; Default = '0' }
+    days_to_retain_log_files           = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'LOGKEEPDAYS'; Default = '1' }
+    daily_log_file_enabled             = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'AG_LOG_ON'; Default = 'Y' }
+    tracker_event_port                 = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'TRACKER_EVENT_PORT'; Default = '7035' }
+    logical_agent_name                 = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'LOGICAL_AGENT_NAME' ; Default = "$env:COMPUTERNAME" }
+    java_new_ar                        = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'JAVA_AR' ; Default = 'N' }
+    persistent_connection              = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'PERSISTENT_CONNECTION'; Default = 'N' }
+    allow_comm_init                    = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'ALLOW_COMM_INIT'; Default = 'Y' }
+    foreign_language_support           = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'I18N'; Default = 'LATIN-1' }
+    ssl                                = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'COMMOPT'; Default = 'SSL=N' }
+    server_agent_protocol_version      = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'PROTOCOL_VERSION'; Default = '12' }
+    autoedit_inline                    = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'USE_JOB_VARIABLES'; Default = 'Y' }
+    listen_to_network_interface        = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'LISTEN_INTERFACE'; Default = '*ANY' }
+    ctms_address_mode                  = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'CTMS_ADDR_MODE'; Default = '' }
+    timeout_for_agent_utilities        = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'UTTIMEOUT'; Default = '600' }
+    tcpip_timeout                      = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'TCP_IP_TIMEOUT'; Default = '60' }
+    tracker_polling_interval           = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'EVENT_TIMEOUT' ; Default = '60' }
+    limit_log_file_size                = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'LIMIT_LOG_FILE_SIZE'; Default = '10' }
+    limit_log_version                  = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'LIMIT_LOG_VERSIONS'; Default = '10' }
+    measure_usage_day                  = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'MEASURE_USAGE_DAYS'; Default = '7' }
+    logon_as_user                      = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'LOGON_AS_USER'; Default = 'N' }
+    logon_domain                       = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'DOMAIN'; Default = '' }
+    job_children_inside_job_object     = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'JOB_WAIT'; Default = 'Y' }
+    add_job_statistics_to_sysout       = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'JOB_STATISTIC'; Default = 'Y' }
+    job_output_name                    = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'OUTPUT_NAME'; Default = 'MEMNAME' }
+    wrap_parameters_with_double_quotes = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'WRAP_PARAM_QUOTES'; Default = '4' }
+    run_user_logon_script              = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'RUN_USER_LOGON_SCRIPT'; Default = 'N' }
+    cjk_encoding                       = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'APPLICATION_LOCALE'; Default = '' }
+    default_printer                    = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'DFTPRT'; Default = '' }
+    echo_job_commands_into_sysout      = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'ECHO_OUTPUT'; Default = 'Y' }
+    smtp_server_relay_name             = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'SMTP_SERVER_NAME'; Default = '' }
+    smtp_port                          = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'SMTP_PORT_NUMBER'; Default = '25' }
+    smtp_sender_mail                   = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'SMTP_SENDER_EMAIL'; Default = 'control@m' }
+    smtp_sender_friendly_name          = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'SMTP_SENDER_FRIENDLY_NAME'; Default = '' }
+    smtp_reply_to_mail                 = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'SMTP_REPLY_TO_EMAIL'; Default = '' }
+    default_agent_name                 = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent' ; Name = 'DEFAULT_AGENT'; Default = '' }
+    cm_type                            = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\WIN' ; Name = 'APPLICATION_VERSION'; Default = '' }
+    cm_name                            = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'CM_APPL_TYPE'; Default = '' }
+    agent_version                      = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'CODE_VERSION'; Default = '' }
+    fd_number                          = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'FD_NUMBER'; Default = '' }
+    fix_number                         = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'FIX_NUMBER'; Default = '' }
+    agent_directory                    = @{ Path = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent\CONFIG' ; Name = 'AGENT_DIR'; Default = '' }
 }
 
 function Get-ModuleParameter {
@@ -244,7 +244,7 @@ Function ConvertFrom-ControlMParameter {
     )
     $ConvertedValue = $null
 
-    if ($Name -eq 'ssl') {
+    if ($Name -eq 'SSL') {
         $ConvertedValue = ($Value -contains 'SSL=Y')
     }
     elseif ($Name -eq 'CommunicationTrace') {
@@ -284,9 +284,9 @@ Function ConvertTo-ControlMParameter {
 
     $NewValue = $null
 
-    if ($Name -eq 'ssl') {
+    if ($Name -eq 'SSL') {
         $NewSetting = if ([bool]$Value) { 'SSL=Y' } else { 'SSL=N' }
-        $ControlMValue = Get-ControlMParameter -Name 'ssl'
+        $ControlMValue = Get-ControlMParameter -Name 'SSL'
         $NewValue = if ([string]::IsNullOrEmpty($Value)) { $NewSetting } else { $ControlMValue -replace "SSL=[N|Y]", $NewSetting }
     }
     elseif ($Name -eq 'CommunicationTrace') {
@@ -319,8 +319,8 @@ Function Get-ControlMParameter {
     }
 
     $RegistryInfo = $configuration[$optionName]
-    Get-ChildItem -Path Registry::$($RegistryInfo.Path) -Name $RegistryInfo.Name -ErrorAction SilentlyContinue -ErrorVariable RegistryError -OutVariable RegistryEntry
-    $RegistryValue = if ($RegistryError) { $RegistryInfo.Default } else { $RegistryEntry.$($RegistryInfo.Name) }
+    Get-ItemProperty -Path $RegistryInfo.Path -Name $RegistryInfo.Name -ErrorAction SilentlyContinue -ErrorVariable RegistryError -OutVariable RegistryEntry | Out-Null
+    if ($RegistryError) { $RegistryValue = $RegistryInfo.Default } else { $RegistryValue = $($RegistryEntry.$($RegistryInfo.Name)) }
 
     return $RegistryValue
 }
@@ -348,7 +348,7 @@ Function Set-ControlMParameter {
         $Changed = $true
         if (-not $module.CheckMode) {
             $RegistryInfo = $configuration[$optionName]
-            Set-ItemProperty -Path Registry::$($RegistryInfo.Path) -Name $RegistryInfo.Name -Value $NewValue -ErrorAction SilentlyContinue -ErrorVariable RegistryError
+            Set-ItemProperty -Path $RegistryInfo.Path -Name $RegistryInfo.Name -Value $Value -ErrorAction SilentlyContinue -ErrorVariable RegistryError
             if ($RegistryError) {
                 $module.FailJson("An error occurs when saving the `"$optionName`" setting in the registry: $RegistryError")
             }
@@ -498,6 +498,7 @@ Function Test-TargetResource {
 
     $difference = $Parameters.Keys | ForEach-Object { if ($resources.ContainsKey($_)) { if ($resources[$_] -ne $Parameters[$_] ) { $_ } } }
     $isCompliant = ($null -eq $difference)
+
     return $isCompliant
 }
 
@@ -632,17 +633,35 @@ function Set-TargetResource {
     }
 
     if (-not $module.CheckMode) {
-        @('AgentToServerPort', 'ServerToAgentPort', 'TrackerEventPort') | ForEach-Object {
+        @('AgentToServerPort') | ForEach-Object {
             $Name = $_
             if ($Parameters[$Name]) {
-                Get-NetFirewallRule | Where-Object { $_.LocalPort -eq $resources[$Name] } | Set-NetFirewallRule -LocalPort $Parameters[$Name] -ErrorAction SilentlyContinue -ErrorVariable ProcessError
+                $PortFilter = Get-NetFirewallPortFilter | Where-Object { $_.RemotePort -Eq $resources[$Name] } 
+                $PortFilter | Set-NetFirewallPortFilter -RemotePort $Parameters[$Name] -ErrorAction SilentlyContinue -ErrorVariable ProcessError
+                if ($ProcessError) {
+                    $module.FailJson("An error occurs when changing the firewall rule with the $($resources[$Name]) remote port to $($Parameters[$Name]) : $ProcessError")
+                }
+            }
+        }
+        @('ServerToAgentPort', 'TrackerEventPort') | ForEach-Object {
+            $Name = $_
+            if ($Parameters[$Name]) {
+                $PortFilter = Get-NetFirewallPortFilter | Where-Object { $_.LocalPort -Eq $resources[$Name] } 
+                $PortFilter | Set-NetFirewallPortFilter -LocalPort $Parameters[$Name] -ErrorAction SilentlyContinue -ErrorVariable ProcessError
                 if ($ProcessError) {
                     $module.FailJson("An error occurs when changing the firewall rule with the $($resources[$Name]) local port to $($Parameters[$Name]) : $ProcessError")
                 }
             }
         }
+        if ($Parameters['TrackerEventPort']) {
+            if ($Parameters['TrackerEventPort'] -ne $resources['TrackerEventPort']) {
+                Restart-Service -Name ctmag -Force -ErrorAction SilentlyContinue -ErrorVariable ProcessError
+                If ($ProcessError) {
+                    $module.FailJson("The Control/M Agent Windows service could not be restarted. $ProcessError")
+                }
+            }
+        }
     }
-
     return $module.Result.changed
 }
 
@@ -671,7 +690,7 @@ $script:ParameterList = (Get-Command -Name 'Test-TargetResource').Parameters
 $params = @{ }
 $ParameterList.Keys | ForEach-Object {
     $optionName = Convert-StringToSnakeCase -String $_
-    if ($module.Params.$optionName) {
+    if ($module.Params.ContainsKey($optionName) -and -not ($null -eq $module.Params.$optionName)) {
         $params.$($_) = $module.Params.$optionName
     }
 }
