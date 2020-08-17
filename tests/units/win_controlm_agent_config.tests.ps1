@@ -11,7 +11,7 @@ catch {
 }
 finally {
     if ($DoPesterUpdate) {
-        Install-Module -Name Pester -Force -SkipPublisherCheck 
+        Install-Module -Name Pester -Force -SkipPublisherCheck
     }
 }
 
@@ -228,7 +228,7 @@ try {
                 $result = Invoke-AnsibleModule -params $params
                 $result.changed | Should -Be $true
             }
-        
+
             It 'Should change ssl' {
 
                 Mock -CommandName Get-ItemProperty -MockWith {

@@ -636,7 +636,7 @@ function Set-TargetResource {
         @('AgentToServerPort') | ForEach-Object {
             $Name = $_
             if ($Parameters[$Name]) {
-                $PortFilter = Get-NetFirewallPortFilter | Where-Object { $_.RemotePort -Eq $resources[$Name] } 
+                $PortFilter = Get-NetFirewallPortFilter | Where-Object { $_.RemotePort -Eq $resources[$Name] }
                 $PortFilter | Set-NetFirewallPortFilter -RemotePort $Parameters[$Name] -ErrorAction SilentlyContinue -ErrorVariable ProcessError
                 if ($ProcessError) {
                     $module.FailJson("An error occurs when changing the firewall rule with the $($resources[$Name]) remote port to $($Parameters[$Name]) : $ProcessError")
@@ -646,7 +646,7 @@ function Set-TargetResource {
         @('ServerToAgentPort', 'TrackerEventPort') | ForEach-Object {
             $Name = $_
             if ($Parameters[$Name]) {
-                $PortFilter = Get-NetFirewallPortFilter | Where-Object { $_.LocalPort -Eq $resources[$Name] } 
+                $PortFilter = Get-NetFirewallPortFilter | Where-Object { $_.LocalPort -Eq $resources[$Name] }
                 $PortFilter | Set-NetFirewallPortFilter -LocalPort $Parameters[$Name] -ErrorAction SilentlyContinue -ErrorVariable ProcessError
                 if ($ProcessError) {
                     $module.FailJson("An error occurs when changing the firewall rule with the $($resources[$Name]) local port to $($Parameters[$Name]) : $ProcessError")
