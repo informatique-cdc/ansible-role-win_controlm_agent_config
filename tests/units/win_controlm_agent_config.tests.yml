@@ -1,0 +1,35 @@
+---
+- name: test the win_controlm_agent_config module
+  hosts: all
+  gather_facts: false
+
+  roles:
+    - win_controlm_agent_config
+
+  tasks:
+    - name: Change port numbers
+      win_controlm_agent_config:
+        agent_to_server_port: 8000
+        server_to_agent_port: 8001
+        tracker_event_port: 8002
+
+    - name: Change Control-M Server hosts
+      win_controlm_agent_config:
+        primary_controlm_server_host: "server1"
+        authorized_controlm_server_hosts: "server1|server2|server3.cloud"
+
+    - name: Change job children inside job object
+      win_controlm_agent_config:
+        job_children_inside_job_object: no
+
+    - name: Change the job ouput name
+      win_controlm_agent_config:
+        job_output_name: JOBNAME
+      register: config
+
+    - name: Test the Control-M Agent Ports
+      assert:
+        that:
+          - config.agent_to_server_port == 8000
+          - config.server_to_agent_port == 8001
+          - config.tracker_event_port == 8002

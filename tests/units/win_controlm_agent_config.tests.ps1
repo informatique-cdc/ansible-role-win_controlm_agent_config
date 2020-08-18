@@ -143,11 +143,11 @@ try {
 
         Context 'Control/M Agent is installed' {
 
-            Mock -CommandName Set-ItemProperty  -MockWith { }
+            Mock -CommandName Set-ItemProperty -MockWith { }
             Mock -CommandName Get-Service -MockWith { }
             Mock -CommandName Restart-Service -MockWith { }
             Mock -CommandName Get-NetFirewallPortFilter -MockWith { }
-            Mock -CommandName Set-NetFirewallPortFiltere -MockWith { }
+            Mock -CommandName Set-NetFirewallPortFilter -MockWith { }
 
             It 'Should change port numbers' {
 
@@ -190,12 +190,12 @@ try {
 
                 Mock -CommandName Get-ItemProperty -MockWith {
                     return @{
-                        OUTPUT_NAME = 'JOBNAME'
+                        OUTPUT_NAME = 'MEMNAME'
                     }
                 }
 
                 $params = @{
-                    job_output_name = 'MEMNAME'
+                    job_output_name = 'JOBNAME'
                 }
                 $result = Invoke-AnsibleModule -params $params
                 $result.changed | Should -Be $true
@@ -215,7 +215,7 @@ try {
                 $result.changed | Should -Be $true
             }
 
-            It 'Should change job children inside job_ bject' {
+            It 'Should change job children inside job object' {
 
                 Mock -CommandName Get-ItemProperty -MockWith {
                     return @{
@@ -250,6 +250,3 @@ try {
 finally {
     Invoke-TestCleanup
 }
-
-
-
