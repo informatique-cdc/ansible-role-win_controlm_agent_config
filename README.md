@@ -1,11 +1,6 @@
 
 # win_controlm_agent_config - Manipulate the configuration of a Control-M Agent on a Windows host
 
-* [Synopsis](#synopsis)
-* [Parameters](#parameters)
-* [Examples](#examples)
-* [Return Values](#return-values)
-
 ## Synopsis
 
 * This Ansible module allows to change the Control-M Agent configuration on Windows-based systems.
@@ -97,12 +92,12 @@ Common return values are documented [here](https://docs.ansible.com/ansible/late
 | ------ |------------| ------------|
 | __config__<br><font color="purple">dictionary</font> | On success |  The retrieved configuration. |
 
+## Authors
+
+* Stéphane Bilqué (@sbilque) Informatique CDC
+
 ## License
 
 This project is licensed under the Apache 2.0 License.
 
 See [LICENSE](LICENSE) to see the full text.
-
-## Authors
-
-* Stéphane Bilqué (@sbilque) Informatique CDC
