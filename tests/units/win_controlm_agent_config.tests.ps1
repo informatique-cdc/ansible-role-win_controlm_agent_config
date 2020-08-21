@@ -35,42 +35,58 @@ Function Invoke-AnsibleModule {
     }
 }
 
+$RegistryPath = 'HKLM:\SOFTWARE\BMC Software\Control-M/Agent'
+
 try {
+
     Describe 'win_controlm_agent_config' -Tag 'Set' {
 
         Context 'Control/M Agent is installed' {
 
-            Mock -CommandName Set-ItemProperty -MockWith { }
-            Mock -CommandName Get-Service -MockWith { }
-            Mock -CommandName Restart-Service -MockWith { }
-            Mock -CommandName Get-NetFirewallPortFilter -MockWith { }
-            Mock -CommandName Set-NetFirewallPortFilter -MockWith { }
+            BeforeAll {
 
-            It 'Should return the configuration only' {
-
-                Mock -CommandName Get-ItemProperty -MockWith {
+                Mock -CommandName Get-ItemProperty -ParameterFilter { $Path.StartsWith($RegistryPath) } -MockWith {
                     return @{
-                        ATCMNDATA          = '9000'
-                        AGCMNDATA          = '9001'
-                        TRACKER_EVENT_PORT = '9002'
+                        ATCMNDATA           = '9000'
+                        AGCMNDATA           = '9001'
+                        TRACKER_EVENT_PORT  = '9002'
+                        CTMSHOST            = 'server2'
+                        CTMPERMHOSTS        = 'server2'
+                        OUTPUT_NAME         = 'MEMNAME'
+                        COMM_TRACE          = '1'
+                        JOB_WAIT            = 'Y'
+                        COMMOPT             = 'SSL=N;DUMMY=N'
+                        LIMIT_LOG_FILE_SIZE = '11'
+                        LIMIT_LOG_VERSIONS  = '11'
                     }
                 }
 
-                $params = @{ }
+                Mock -CommandName Get-Service -ParameterFilter { $Name -eq 'ctmag' } -MockWith {
+                    return @{
+                        Name   = 'ctmag'
+                        Status = 'Running'
+                    }
+                }
 
+                Mock -CommandName Set-ItemProperty -ParameterFilter { $Path.StartsWith($RegistryPath) } -MockWith {
+                    Write-Host "Item $Name is set in the registry with $Value"
+                }
+
+                Mock -CommandName Restart-Service -ParameterFilter { $Name -eq 'ctmag' } -MockWith {
+                    Write-Host "The service is restard"
+                }
+                Mock -CommandName Get-NetFirewallPortFilter -MockWith { }
+                Mock -CommandName Set-NetFirewallPortFilter -MockWith { }
+            }
+
+            It 'Should return the configuration only' {
+
+                $params = @{ }
                 $result = Invoke-AnsibleModule -params $params
                 $result.changed | Should -Be $false
             }
 
             It 'Should change port numbers' {
-
-                Mock -CommandName Get-ItemProperty -MockWith {
-                    return @{
-                        ATCMNDATA          = '9000'
-                        AGCMNDATA          = '9001'
-                        TRACKER_EVENT_PORT = '9002'
-                    }
-                }
 
                 $params = @{
                     agent_to_server_port = 8000
@@ -80,16 +96,12 @@ try {
 
                 $result = Invoke-AnsibleModule -params $params
                 $result.changed | Should -Be $true
+                $result.diff.after.agent_to_server_port | Should -Be 8000
+                $result.diff.after.server_to_agent_port | Should -Be 8001
+                $result.diff.after.tracker_event_port | SHould -Be 8002
             }
 
             It 'Should change controlm server hosts' {
-
-                Mock -CommandName Get-ItemProperty -MockWith {
-                    return @{
-                        CTMSHOST     = 'server2'
-                        CTMPERMHOSTS = 'server2'
-                    }
-                }
 
                 $params = @{
                     primary_controlm_server_host     = 'server1'
@@ -101,12 +113,6 @@ try {
 
             It 'Should change job name' {
 
-                Mock -CommandName Get-ItemProperty -MockWith {
-                    return @{
-                        OUTPUT_NAME = 'MEMNAME'
-                    }
-                }
-
                 $params = @{
                     job_output_name = 'JOBNAME'
                 }
@@ -116,11 +122,6 @@ try {
 
             It 'Should change communication trace' {
 
-                Mock -CommandName Get-ItemProperty -MockWith {
-                    return @{
-                        COMM_TRACE = '1'
-                    }
-                }
                 $params = @{
                     communication_trace = $false
                 }
@@ -130,11 +131,6 @@ try {
 
             It 'Should change job children inside job object' {
 
-                Mock -CommandName Get-ItemProperty -MockWith {
-                    return @{
-                        JOB_WAIT = 'Y'
-                    }
-                }
                 $params = @{
                     job_children_inside_job_object = $false
                 }
@@ -144,11 +140,6 @@ try {
 
             It 'Should change ssl' {
 
-                Mock -CommandName Get-ItemProperty -MockWith {
-                    return @{
-                        COMMOPT = 'SSL=N;DUMMY=N'
-                    }
-                }
                 $params = @{
                     ssl = $true
                 }
@@ -156,6 +147,28 @@ try {
                 $result.changed | Should -Be $true
                 $result.diff.before.ssl | Should -Be $false
                 $result.diff.after.ssl | Should -Be $true
+            }
+
+            It 'Should change maximum log of diagnostic logs files' {
+
+                $params = @{
+                    limit_log_file_size = 1000
+                }
+                $result = Invoke-AnsibleModule -params $params
+                $result.changed | Should -Be $true
+                $result.diff.before.limit_log_file_size | Should -Be 11
+                $result.diff.after.limit_log_file_size | Should -Be 1000
+            }
+
+            It 'Should change the number of generations of diagnostic log information' {
+
+                $params = @{
+                    limit_log_version = 99
+                }
+                $result = Invoke-AnsibleModule -params $params
+                $result.changed | Should -Be $true
+                $result.diff.before.limit_log_version | Should -Be 11
+                $result.diff.after.limit_log_version | Should -Be 99
             }
         }
     }
