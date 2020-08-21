@@ -5,7 +5,7 @@
 
 * This Ansible module allows to change the Control-M Agent configuration on Windows-based systems.
 * Control-M Agent configurations use both `CTMWINCFG` or `CTMAGCFG` command for setting configuration.
-* This module provides an implementation for working with Agent configuration in a deterministic way. Commands are not used. This module make change in registry locations.
+* This module provides an implementation for working with Agent configuration in a deterministic way. Commands are not used. This module makes changes in registry locations.
 
 ## Parameters
 
