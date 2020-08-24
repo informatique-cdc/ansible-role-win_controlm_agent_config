@@ -357,6 +357,16 @@ Function Set-ControlMParameter {
     return $Changed
 }
 
+function Restart-AgentService {
+
+    if (-not $module.CheckMode) {
+        Restart-Service -Name ctmag -Force -ErrorAction SilentlyContinue -ErrorVariable ProcessError
+        If ($ProcessError) {
+            $module.FailJson("The Control/M Agent Windows service could not be restarted. $ProcessError")
+        }
+    }
+}
+
 Function Get-TargetResource {
     <#
     .SYNOPSIS
@@ -653,13 +663,13 @@ function Set-TargetResource {
                 }
             }
         }
-        if ($Parameters['TrackerEventPort']) {
-            if ($Parameters['TrackerEventPort'] -ne $resources['TrackerEventPort']) {
-                Restart-Service -Name ctmag -Force -ErrorAction SilentlyContinue -ErrorVariable ProcessError
-                If ($ProcessError) {
-                    $module.FailJson("The Control/M Agent Windows service could not be restarted. $ProcessError")
-                }
-            }
+
+        if ($module.Diff.after.tracker_event_port) {
+            Restart-AgentService
+        } elseif ($module.Diff.after.limit_log_file_size) {
+            Restart-AgentService
+        } elseif ($module.Diff.after.limit_log_version) {
+            Restart-AgentService
         }
     }
     return $module.Result.changed
