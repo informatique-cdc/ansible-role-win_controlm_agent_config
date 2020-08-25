@@ -677,7 +677,7 @@ function Set-TargetResource {
 
 $module = [Ansible.Basic.AnsibleModule]::Create($args, $spec)
 
-Get-Service -Name ctmag -ErrorAction SilentlyContinue -ErrorVariable ProcessError -OutVariable Service
+$service = Get-Service -Name ctmag -ErrorAction SilentlyContinue -ErrorVariable ProcessError
 If ($ProcessError) {
     $module.FailJson("The Control/M Agent Windows service is not installed. $ProcessError")
 }
